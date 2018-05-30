@@ -1,0 +1,9 @@
+.faq-top-section
+  h3
+    | FAQs
+.faq-section
+  .columns
+    .column
+      div
+        each faqs as |faq|
+          = faq-details faq=faq

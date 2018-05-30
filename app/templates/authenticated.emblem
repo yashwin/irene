@@ -54,6 +54,10 @@
               = link-to 'authenticated.projects' class="mp-auth-settings highlighted-button"
                 | #{model.totalProjects}
           .column.content-right.top-icons
+            a
+              = link-to 'authenticated.faqs' class="mp-auth-faqs"
+                = fa-icon "question" class="sidebar-icons"
+                | FAQs
             a href='' id='intercom_support' class="mp-auth-support"
               = fa-icon "support" class="sidebar-icons"
               = t "support"

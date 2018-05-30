@@ -1,0 +1,15 @@
+.message-header click="toggleFAQs" class=mpClassSelector:mp-plus:mp-minus
+    .columns
+      .column
+        h6 = faq.question
+      .column.content-right.is-one-sixth.faq-icons
+        if showFAQs
+          i.fa.fa-chevron-up
+        else
+          i.fa.fa-chevron-down
+
+if showFAQs
+  .message-body
+    .columns
+      .column
+        h6 = faq.answer

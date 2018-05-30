@@ -32,6 +32,7 @@ Router.map(function() {
     this.route('compare', {path: '/compare/:files'});
     this.route('payment-success');
     this.route('payment-failure');
+    this.route('faqs');
   });
   this.route('invitation', {path: '/invitation/:uuid'});
 
