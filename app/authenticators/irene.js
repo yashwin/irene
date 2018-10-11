@@ -1,5 +1,8 @@
 // jshint ignore: start
-import Ember from 'ember';
+import { Promise } from 'rsvp';
+
+import { getOwner } from '@ember/application';
+import { inject as service } from '@ember/service';
 import Base from 'ember-simple-auth/authenticators/base';
 import ENV from 'irene/config/environment';
 
@@ -17,22 +20,22 @@ const processData = (data) => {
 
 const IreneAuthenticator = Base.extend({
 
-  ajax: Ember.inject.service(),
+  ajax: service(),
 
   resumeTransistion() {
-    const authenticatedRoute = Ember.getOwner(this).lookup("route:authenticated");
+    const authenticatedRoute = getOwner(this).lookup("route:authenticated");
     const lastTransition = authenticatedRoute.get("lastTransition");
     if (lastTransition !== null) {
       return lastTransition.retry();
     } else {
-      const applicationRoute = Ember.getOwner(this).lookup("route:application");
+      const applicationRoute = getOwner(this).lookup("route:application");
       return applicationRoute.transitionTo(ENV['ember-simple-auth']["routeAfterAuthentication"]);
     }
   },
 
   authenticate(identification, password, otp, errorCallback, loginStatus) {
-    const ajax = this.get("ajax");
-    return new Ember.RSVP.Promise((resolve, reject) => {
+    const ajax = this.ajax;
+    return new Promise((resolve, reject) => {
       const data = {
         username: identification,
         password,
@@ -47,12 +50,12 @@ const IreneAuthenticator = Base.extend({
       }, (error) => {
         loginStatus(false);
         errorCallback(error);
-        this.get("notify").error(error.payload.message, ENV.notifications);
+        this.notify.error(error.payload.message, ENV.notifications);
         for (error of error.errors) {
           if (error.status === "0") {
-            return this.get("notify").error("Unable to reach server. Please try after sometime", ENV.notifications);
+            return this.notify.error("Unable to reach server. Please try after sometime", ENV.notifications);
           }
-          this.get("notify").error("Please enter valid account details", ENV.notifications);
+          this.notify.error("Please enter valid account details", ENV.notifications);
         }
         return reject(error);
       });
@@ -60,8 +63,8 @@ const IreneAuthenticator = Base.extend({
   },
 
   restore(data) {
-    const ajax = this.get("ajax");
-    return new Ember.RSVP.Promise((resolve, reject) => {
+    const ajax = this.ajax;
+    return new Promise((resolve, reject) => {
       const url = ENV['ember-simple-auth']['checkEndPoint'];
       ajax.post(url, {data})
       .then((data) => {
@@ -79,9 +82,9 @@ const IreneAuthenticator = Base.extend({
   },
 
   invalidate() {
-    const ajax = this.get("ajax");
+    const ajax = this.ajax;
     localStorage.clear();
-    return new Ember.RSVP.Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const url = ENV['ember-simple-auth']['logoutEndPoint'];
       ajax.post(url)
       .then((data) => {

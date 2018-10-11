@@ -1,14 +1,14 @@
-import Ember from 'ember';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import lookupValidator from 'ember-changeset-validations';
 import Changeset from 'ember-changeset';
 import InviteRegisterValidation from '../../validations/invite-register';
 
-export default Ember.Component.extend({
-  inviteRegisterPOJO: {},
+export default Component.extend({
+  inviteRegisterPOJO: {}, // eslint-disable-line
   init() {
     this._super(...arguments);
-    const inviteRegisterPOJO = this.get('inviteRegisterPOJO');
+    const inviteRegisterPOJO = this.inviteRegisterPOJO;
     const changeset = new Changeset(
       inviteRegisterPOJO, lookupValidator(InviteRegisterValidation), InviteRegisterValidation
     );
@@ -16,15 +16,15 @@ export default Ember.Component.extend({
   },
 
   registerWithServer (data) {
-    const token = this.get('token');
+    const token = this.token;
     const url = [ENV.endpoints.invite, token].join('/')
-    return this.get('ajax').request(url, {
+    return this.ajax.request(url, {
       method: 'POST',
       data: data
     }).then(() => {
       this.set('success', true);
     }, (errors) => {
-      const changeset = this.get('changeset');
+      const changeset = this.changeset;
       Object.keys(errors.payload).forEach(key => {
         changeset.addError(key, errors.payload[key]);
       });
@@ -40,7 +40,7 @@ export default Ember.Component.extend({
           const password = changeset.get('password');
           const passwordConfirmation = changeset.get('passwordConfirmation');
           const phoneNumber = changeset.get('phone');
-          const selectedCountryData = this.get("selectedCountryData");
+          const selectedCountryData = this.selectedCountryData;
           const fullNumber = selectedCountryData.dialCode + '-' +  phoneNumber;
           const termsAccepted = changeset.get('termsAccepted');
           this.registerWithServer({
@@ -56,7 +56,7 @@ export default Ember.Component.extend({
       });
     },
     geoIpLookupFunc: function(callback) {
-      this.get('ajax').request('https://ipinfo.io')
+      this.ajax.request('https://ipinfo.io')
        .then(function(resp) {
          if (!resp || !resp.country) {
            callback('US');

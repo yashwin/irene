@@ -1,10 +1,11 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
-import {isUnauthorizedError} from 'ember-ajax/errors';
+import { isUnauthorizedError } from 'ember-ajax/errors';
 
-const LoginComponentComponent = Ember.Component.extend({
-  session: Ember.inject.service('session'),
-  notify: Ember.inject.service('notification-messages-service'),
+const LoginComponentComponent = Component.extend({
+  session: service('session'),
+  notify: service('notification-messages-service'),
   MFAEnabled: false,
   isLogingIn: false,
   isSSOLogingIn: false,
@@ -14,12 +15,12 @@ const LoginComponentComponent = Ember.Component.extend({
   isNotEnterprise: !ENV.isEnterprise,
   actions: {
     authenticate() {
-      let identification = this.get('identification');
-      let password = this.get('password');
-      const otp = this.get("otp");
+      let identification = this.identification;
+      let password = this.password;
+      const otp = this.otp;
 
       if (!identification || !password) {
-        return this.get("notify").error("Please enter username and password", ENV.notifications);
+        return this.notify.error("Please enter username and password", ENV.notifications);
       }
       identification = identification.trim();
       password = password.trim();
@@ -35,19 +36,19 @@ const LoginComponentComponent = Ember.Component.extend({
         this.set("isLogingIn", false);
       };
 
-      this.get('session').authenticate("authenticator:irene", identification, password, otp, errorCallback, loginStatus);
+      this.session.authenticate("authenticator:irene", identification, password, otp, errorCallback, loginStatus);
     },
 
     SSOAuthenticate() {
       this.set("isSSOLogingIn", true);
       const url = `${ENV.endpoints.saml2}?return_to=${window.location.origin}/saml2/redirect`;
 
-      this.get("ajax").request(url)
+      this.ajax.request(url)
         .then(function(data) {
           window.location.href = data.url;
         })
         .catch(function(err) {
-          this.get("notify").error(err.payload.message);
+          this.notify.error(err.payload.message);
         });
     }
   }

@@ -1,4 +1,4 @@
-import Ember from 'ember';
+import { helper as buildHelper } from '@ember/component/helper';
 import ENUMS from 'irene/enums';
 
 // This function receives the params `params, hash`
@@ -17,7 +17,7 @@ const appEnvironment = function(params) {
   }
 };
 
-const AppEnvironmentHelper = Ember.Helper.helper(appEnvironment);
+const AppEnvironmentHelper = buildHelper(appEnvironment);
 
 export { appEnvironment };
 

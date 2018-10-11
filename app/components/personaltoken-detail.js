@@ -1,11 +1,12 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 
-const PersonaltokenDetailComponent = Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const PersonaltokenDetailComponent = Component.extend({
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   tagName: '',
 
 
@@ -16,22 +17,22 @@ const PersonaltokenDetailComponent = Ember.Component.extend({
   tTokenRevoked: t('personalTokenRevoked'),
 
   confirmCallback() {
-    const tTokenRevoked = this.get('tTokenRevoked');
+    const tTokenRevoked = this.tTokenRevoked;
     const personaltokenId = this.get('personaltoken.id');
     const url = [ENV.endpoints.personaltokens, personaltokenId].join('/');
     this.set("isDeletingToken", true);
-    this.get('ajax').delete(url)
+    this.ajax.delete(url)
     .then(() => {
       if(!this.isDestroyed) {
         this.set('isNotRevoked', false);
         this.set("isDeletingToken", false);
         this.send('closeRevokePersonalTokenConfirmBox');
       }
-      this.get('notify').success(tTokenRevoked);
+      this.notify.success(tTokenRevoked);
     }, (error) => {
       if(!this.isDestroyed) {
         this.set("isDeletingToken", false);
-        this.get("notify").error(error.payload.message);
+        this.notify.error(error.payload.message);
       }
     });
   },

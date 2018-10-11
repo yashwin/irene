@@ -1,16 +1,22 @@
-import Ember from 'ember';
-import PaginateMixin from 'irene/mixins/paginate';
+import $ from 'jquery';
 import ENUMS from 'irene/enums';
-import {filterPlatformValues} from 'irene/helpers/filter-platform';
+import { once } from '@ember/runloop';
+import Component from '@ember/component';
+import { underscore } from '@ember/string';
+import { gt } from '@ember/object/computed';
+import PaginateMixin from 'irene/mixins/paginate';
+import { observer, computed } from '@ember/object';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
+import { filterPlatformValues } from 'irene/helpers/filter-platform';
 
-const ProjectListComponent = Ember.Component.extend(PaginateMixin, {
+const ProjectListComponent = Component.extend(PaginateMixin, {
 
-  i18n: Ember.inject.service(),
+  i18n: service(),
 
   classNames: ["columns"],
   projects: null,
-  hasProjects: Ember.computed.gt('projects.meta.count', 0),
+  hasProjects: gt('projects.meta.count', 0),
   query: "",
   targetObject: "OrganizationProject",
 
@@ -25,24 +31,24 @@ const ProjectListComponent = Ember.Component.extend(PaginateMixin, {
   tMostRecent: t("mostRecent"),
   tLeastRecent: t("leastRecent"),
 
-  newProjectsObserver: Ember.observer("realtime.ProjectCounter", function() {
+  newProjectsObserver: observer("realtime.ProjectCounter", function() {
     return this.incrementProperty("version");
   }),
 
-  sortProperties: (function() {
-    let sortingKey = this.get("sortingKey");
-    const sortingReversed = this.get("sortingReversed");
+  sortProperties: computed("sortingKey", "sortingReversed", function() {
+    let sortingKey = this.sortingKey;
+    const sortingReversed = this.sortingReversed;
     if (sortingReversed) {
       sortingKey = `${sortingKey}:desc`;
     }
     return [sortingKey];
-  }).property("sortingKey", "sortingReversed"),
+  }),
 
   resetOffset() {
     return this.set("offset", 0);
   },
 
-  offsetResetter: Ember.observer("query", "sortingKey", "sortingReversed", "platformType", function() {
+  offsetResetter: observer("query", "sortingKey", "sortingReversed", "platformType", function() {
     return (() => {
       const result = [];
       for (let property of ["query", "sortingKey", "sortingReversed", "platformType"]) {
@@ -52,7 +58,7 @@ const ProjectListComponent = Ember.Component.extend(PaginateMixin, {
         const propertyChanged = propertyOldValue !== propertyNewValue;
         if (propertyChanged) {
           this.set(propertyOldName, propertyNewValue);
-          result.push(Ember.run.once(this, 'resetOffset'));
+          result.push(once(this, 'resetOffset'));
         } else {
           result.push(undefined);
         }
@@ -62,13 +68,13 @@ const ProjectListComponent = Ember.Component.extend(PaginateMixin, {
   }),
 
 
-  extraQueryStrings: Ember.computed("query", "sortingKey", "sortingReversed", "platformType", function() {
-    const platform = this.get("platformType")
-    const reverse = this.get("sortingReversed")
-    const sorting = Ember.String.underscore(this.get("sortingKey"))
+  extraQueryStrings: computed("query", "sortingKey", "sortingReversed", "platformType", function() {
+    const platform = this.platformType
+    const reverse = this.sortingReversed
+    const sorting = underscore(this.sortingKey)
 
     const query = {
-      q: this.get("query"),
+      q: this.query,
       sorting: sorting
     };
     if(platform != null && platform != -1) {
@@ -80,12 +86,12 @@ const ProjectListComponent = Ember.Component.extend(PaginateMixin, {
     return JSON.stringify(query, Object.keys(query).sort());
   }),
 
-  sortingKeyObjects: (function() {
-    const tDateUpdated = this.get("tDateUpdated");
-    const tDateCreated = this.get("tDateCreated");
-    const tPackageName = this.get("tPackageName");
-    const tLeastRecent = this.get("tLeastRecent");
-    const tMostRecent = this.get("tMostRecent");
+  sortingKeyObjects: computed(function() {
+    const tDateUpdated = this.tDateUpdated;
+    const tDateCreated = this.tDateCreated;
+    const tPackageName = this.tPackageName;
+    const tLeastRecent = this.tLeastRecent;
+    const tMostRecent = this.tMostRecent;
     const keyObjects = [
       { key: "lastFileCreatedOn", text: tDateUpdated },
       { key: "id", text: tDateCreated },
@@ -115,7 +121,7 @@ const ProjectListComponent = Ember.Component.extend(PaginateMixin, {
       }
     }
     return keyObjectsWithReverse;
-  }).property(),
+  }),
 
   platformObjects: ENUMS.PLATFORM.CHOICES.slice(0, +-4 + 1 || undefined),
   actions: {

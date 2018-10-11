@@ -1,48 +1,54 @@
-import Ember from 'ember';
+import { getOwner } from '@ember/application';
+import { filter } from '@ember/object/computed';
+import { alias } from '@ember/object/computed';
+import { computed } from '@ember/object';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import { translationMacro as t } from 'ember-i18n';
 
-const CompareFilesComponent = Ember.Component.extend({
+const CompareFilesComponent = Component.extend({
 
   file1: null,
   file2: null,
   isSummary: true,
   isReverse: false,
 
-  i18n: Ember.inject.service(),
+  i18n: service(),
   tCompareWarningOldFile: t("compareWarningOldFile"),
   tCompareWarningSameFiles: t("compareWarningSameFiles"),
 
-  summaryClass: Ember.computed("isSummary", function() {
-    if (this.get("isSummary")) {
+  summaryClass: computed("isSummary", function() {
+    if (this.isSummary) {
       return "is-active";
     }
   }),
 
-  detailsClass: Ember.computed("isSummary", function() {
-    if (!this.get("isSummary")) {
+  detailsClass: computed("isSummary", function() {
+    if (!this.isSummary) {
       return "is-active";
     }
   }),
 
-  allFiles: (function() {
+  selectedBaseFile: alias('file1.id'),
+  selectedCompareFile: alias('file2.id'),
+
+  allFiles: computed("file1.{project.id", "id}", "file2.id", function() {
     const projectId = this.get("file1.project.id");
-    this.set("selectedBaseFile", this.get("file1.id"));
-    this.set("selectedCompareFile", this.get("file2.id"));
     const allFiles = [];
-    this.get("store").query("file", {projectId:projectId, limit: 1000})
+    this.store.query("file", {projectId:projectId, limit: 1000})
     .then((data) => {
       data.content.forEach((item) => {
         allFiles.push(item.id);
         this.set("allFiles", allFiles);
       });
     });
-  }).property("file1.project.id", "file1.id", "file2.id"),
+  }),
 
-  compareText: (function() {
+  compareText: computed(function() {
     const file1Id = parseInt(this.get("file1.id"));
     const file2Id = parseInt(this.get("file2.id"));
-    const tCompareWarningOldFile = this.get("tCompareWarningOldFile");
-    const tCompareWarningSameFiles = this.get("tCompareWarningSameFiles");
+    const tCompareWarningOldFile = this.tCompareWarningOldFile;
+    const tCompareWarningSameFiles = this.tCompareWarningSameFiles;
     if(file1Id === file2Id) {
       return tCompareWarningSameFiles;
     }
@@ -51,15 +57,15 @@ const CompareFilesComponent = Ember.Component.extend({
     }
   }).property("file1.id", "file2.id"),
 
-  allBaseFiles: Ember.computed.filter('allFiles', function(file) {
+  allBaseFiles: filter('allFiles', function(file) {
     return file !== this.get("file1.id");
   }).property("file1.id", "allFiles"),
 
-  allCompareFiles: Ember.computed.filter('allFiles', function(file) {
+  allCompareFiles: filter('allFiles', function(file) {
     return file !== this.get("file2.id");
   }).property("file2.id", "allFiles"),
 
-  comparisons: (function() {
+  comparisons: computed(function() {
     const comparisons = [];
     const file1Analyses = this.get("file1.analyses");
     const file2Analyses = this.get("file2.analyses");
@@ -93,10 +99,10 @@ const CompareFilesComponent = Ember.Component.extend({
     },
 
     compareFiles() {
-      const selectedBaseFile = this.get("selectedBaseFile");
-      const selectedCompareFile = this.get("selectedCompareFile");
+      const selectedBaseFile = this.selectedBaseFile;
+      const selectedCompareFile = this.selectedCompareFile;
       const comparePath = `${selectedBaseFile}...${selectedCompareFile}`;
-      Ember.getOwner(this).lookup('route:authenticated').transitionTo("authenticated.compare", comparePath);
+      getOwner(this).lookup('route:authenticated').transitionTo("authenticated.compare", comparePath);
     },
 
     selectBaseFile() {

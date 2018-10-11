@@ -1,17 +1,15 @@
-/* jshint ignore:start */
-
-import Ember from 'ember';
+import { getOwner } from '@ember/application';
+import { computed } from '@ember/object';
+import { filter } from '@ember/object/computed';
+import Component from '@ember/component';
+import { isEmpty } from '@ember/utils';
+import { inject as service } from '@ember/service';
 import ENUMS from 'irene/enums';
 import ENV from 'irene/config/environment';
 
-const isEmpty = inputValue => Ember.isEmpty(inputValue);
-
-const {inject: {service}} = Ember;
-
-
-export default Ember.Component.extend({
+export default Component.extend({
   findingId: 0,
-  findings: [],
+  findings: [], // eslint-disable-line
   findingTitle: "",
   findingDescription: "",
 
@@ -28,27 +26,27 @@ export default Ember.Component.extend({
   availabilityImpacts: ENUMS.AVAILABILITY_IMPACT.CHOICES.slice(0, 3),
   confidentialityImpacts: ENUMS.CONFIDENTIALITY_IMPACT.CHOICES.slice(0, 3),
 
-  ireneFilePath: (function() {
+  ireneFilePath: computed(function() {
     const fileId = this.get("analysisDetails.file.id");
     const ireneHost = ENV.ireneHost;
     return [ireneHost, "file", fileId].join('/');
-  }).property(),
+  }),
 
-  analysisDetails: (function() {
-    return this.get("store").findRecord('security/analysis', this.get("analysis.analysisId"));
-  }).property(),
+  analysisDetails: computed(function() {
+    return this.store.findRecord('security/analysis', this.get("analysis.analysisId"));
+  }),
 
-  owasps: (function() {
-    return this.get("store").findAll("owasp");
-  }).property(),
+  owasps: computed(function() {
+    return this.store.findAll("owasp");
+  }),
 
-  pcidsses: (function() {
-    return this.get("store").findAll("pcidss");
-  }).property(),
+  pcidsses: computed(function() {
+    return this.store.findAll("pcidss");
+  }),
 
-  allFindings: (function() {
-    let findingId = this.get("findingId");
-    const findings = this.get("addedFindings") || this.get("analysisDetails.findings");
+  allFindings: computed("analysisDetails.findings", "addedFindings", function() {
+    let findingId = this.findingId;
+    const findings = this.addedFindings || this.get("analysisDetails.findings");
     if(findings) {
       findings.forEach((finding) => {
         findingId = findingId + 1;
@@ -57,7 +55,7 @@ export default Ember.Component.extend({
       });
       return findings;
     }
-  }).property("analysisDetails.findings", "addedFindings"),
+  }),
 
   confirmCallback(key) {
     if(key === "findings") {
@@ -66,11 +64,11 @@ export default Ember.Component.extend({
       return this.set("showClearAllFindingsConfirmBox", false);
     }
     if(key === "attachment") {
-      this.deleteFile(this.get("deletedFile"));
+      this.deleteFile(this.deletedFile);
       return this.set("showRemoveFileConfirmBox", false);
     }
     if(key === "finding") {
-      const availableFindings = this.get("availableFindings");
+      const availableFindings = this.availableFindings;
       this.set("addedFindings", availableFindings);
       this.set("analysisDetails.findings", availableFindings);
       return this.set("showRemoveFindingConfirmBox", false);
@@ -91,13 +89,13 @@ export default Ember.Component.extend({
     }
   },
 
-  availableFindings: Ember.computed.filter('allFindings', function(allFinding) {
-    const deletedFinding = this.get("deletedFinding");
+  availableFindings: filter('allFindings', function(allFinding) {
+    const deletedFinding = this.deletedFinding;
     return allFinding.id !== deletedFinding;
   }),
 
   deleteFile(id) {
-    const attachment = this.get("store").peekRecord('security/attachment', id);
+    const attachment = this.store.peekRecord('security/attachment', id);
     if(attachment) {
       attachment.deleteRecord();
       attachment.save();
@@ -115,13 +113,13 @@ export default Ember.Component.extend({
     const availabilityImpact = this.get("analysisDetails.availabilityImpact") || ENUMS.AVAILABILITY_IMPACT.NONE;
     const vector =`CVSS:3.0/AV:${attackVector}/AC:${attackComplexity}/PR:${privilegesRequired}/UI:${userInteraction}/S:${scope}/C:${confidentialityImpact}/I:${integrityImpact}/A:${availabilityImpact}`;
     const url = `cvss?vector=${vector}`;
-    this.get("ajax").request(url)
+    this.ajax.request(url)
     .then((data) => {
       this.set("analysisDetails.cvssBase", data.cvss_base);
       this.set("analysisDetails.risk", data.risk);
       this.set("analysisDetails.cvssVector", vector);
     }, () => {
-      this.get("notify").error("Sorry something went wrong, please try again");
+      this.notify.error("Sorry something went wrong, please try again");
     });
   },
 
@@ -135,7 +133,7 @@ export default Ember.Component.extend({
       };
       const analysisId= this.get("analysis.analysisId");
       try {
-        var fileData = await this.get("ajax").post(ENV.endpoints.uploadFile,{namespace: 'api/hudson-api', data});
+        var fileData = await this.ajax.post(ENV.endpoints.uploadFile,{namespace: 'api/hudson-api', data});
         await file.uploadBinary(fileData.url, {
           method: 'PUT'
         });
@@ -147,15 +145,15 @@ export default Ember.Component.extend({
           analysis: analysisId,
           content_type: "ANALYSIS"
         };
-        await this.get("ajax").post(ENV.endpoints.uploadedAttachment,{namespace: 'api/hudson-api', data: fileDetailsData});
+        await this.ajax.post(ENV.endpoints.uploadedAttachment,{namespace: 'api/hudson-api', data: fileDetailsData});
 
         this.set("isUploading", false);
-        this.get("notify").success("File Uploaded Successfully");
-        const analysisObj = this.get("store").findRecord('security/analysis', this.get("analysis.analysisId"));
+        this.notify.success("File Uploaded Successfully");
+        const analysisObj = this.store.findRecord('security/analysis', this.get("analysis.analysisId"));
         this.set('analysisDetails', analysisObj);
       } catch(error) {
         this.set("isUploading", false);
-        this.get("notify").error("Sorry something went wrong, please try again");
+        this.notify.error("Sorry something went wrong, please try again");
         return;
       }
     },
@@ -217,10 +215,10 @@ export default Ember.Component.extend({
     },
 
     addFinding() {
-      const findingTitle = this.get("findingTitle");
-      const findingDescription = this.get("findingDescription");
-      if (isEmpty(findingDescription)) return this.get("notify").error("Please fill the description");
-      let findingId = this.get("findingId");
+      const findingTitle = this.findingTitle;
+      const findingDescription = this.findingDescription;
+      if (isEmpty(findingDescription)) return this.notify.error("Please fill the description");
+      let findingId = this.findingId;
       findingId = findingId + 1;
       const findings = this.get("analysisDetails.findings");
       const newFinding = {
@@ -231,7 +229,7 @@ export default Ember.Component.extend({
       findings.addObject(newFinding);
       this.set("findingId", findingId);
       this.set("addedFindings", findings);
-      this.get("notify").success("Finding Added");
+      this.notify.success("Finding Added");
       this.setProperties({
         findingTitle: "",
         findingDescription: ""
@@ -258,14 +256,14 @@ export default Ember.Component.extend({
 
     downloadAttachment(id) {
       const url = [ENV.endpoints.uploadFile, id, ENV.endpoints.downloadAttachment].join('/');
-      return this.get("ajax").request(url, {namespace: 'api/hudson-api'})
+      return this.ajax.request(url, {namespace: 'api/hudson-api'})
       .then((data) => {
         window.open(data.url, '_blank');
       }, (error) => {
         for (error of error.errors) {
-          this.get("notify").error(error.detail.error);
+          this.notify.error(error.detail.error);
         }
-      })
+      });
     },
 
     resetOverriddenAnalysis() {
@@ -292,7 +290,7 @@ export default Ember.Component.extend({
       const analysisId= this.get("analysis.analysisId");
       const findings = this.get("analysisDetails.findings");
       let overriddenRisk = this.get("analysisDetails.overriddenRisk");
-      if(typeof overriddenRisk === "object" && !Ember.isEmpty(overriddenRisk)) {
+      if(typeof overriddenRisk === "object" && !isEmpty(overriddenRisk)) {
         overriddenRisk = overriddenRisk.value;
       }
       const overriddenRiskToProfile = this.get("analysisDetails.overriddenRiskToProfile");
@@ -306,7 +304,7 @@ export default Ember.Component.extend({
       const availabilityImpact = this.get("analysisDetails.availabilityImpact");
 
       for (let inputValue of [attackVector, attackComplexity, privilegesRequired, userInteraction, scope, confidentialityImpact, integrityImpact, availabilityImpact]) {
-        if (isEmpty(inputValue)) { return this.get("notify").error("Please select all the CVSS Metrics"); }
+        if (isEmpty(inputValue)) { return this.notify.error("Please select all the CVSS Metrics"); }
       }
 
       const cvssVector = this.get("analysisDetails.cvssVector");
@@ -330,19 +328,17 @@ export default Ember.Component.extend({
       };
       this.set("isSavingAnalyses", true);
       const url = [ENV.endpoints.analyses, analysisId].join('/');
-      this.get("ajax").put(url,{ namespace: 'api/hudson-api', data: JSON.stringify(data), contentType: 'application/json' })
+      this.ajax.put(url,{ namespace: 'api/hudson-api', data: JSON.stringify(data), contentType: 'application/json' })
       .then(() => {
         this.set("isSavingAnalyses", false);
-        this.get("notify").success("Analyses Updated");
+        this.notify.success("Analyses Updated");
         if(key) {
-          Ember.getOwner(this).lookup('route:authenticated').transitionTo("authenticated.security.file", this.get("analysisDetails.file.id"));
+          getOwner(this).lookup('route:authenticated').transitionTo("authenticated.security.file", this.get("analysisDetails.file.id"));
         }
       }, () => {
         this.set("isSavingAnalyses", false);
-        this.get("notify").error("Sorry something went wrong, please try again");
+        this.notify.error("Sorry something went wrong, please try again");
       })
     }
   }
 });
-
-/* jshint ignore:end */

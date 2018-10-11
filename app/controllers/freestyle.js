@@ -1,10 +1,8 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
 import FreestyleController from 'ember-freestyle/controllers/freestyle';
 
-const { inject } = Ember;
-
 export default FreestyleController.extend({
-  emberFreestyle: inject.service(),
+  emberFreestyle: service(),
 
   /* BEGIN-FREESTYLE-USAGE fp:notes
 ### A few notes regarding freestyle-palette
@@ -36,7 +34,7 @@ export default Ember.Component.extend({
 ```
   END-FREESTYLE-USAGE */
 
-  colorPalette: {
+  colorPalette: { // eslint-disable-line
     'primary': {
       'name': 'cyan',
       'base': '#00bcd4'

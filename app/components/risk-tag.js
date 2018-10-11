@@ -1,19 +1,21 @@
-import Ember from 'ember';
 import ENUMS from 'irene/enums';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
 
-export default Ember.Component.extend({
+export default Component.extend({
   analysis: null,
-  i18n: Ember.inject.service(),
+  i18n: service(),
 
   tScanning: t("scanning"),
   tUntested: t("untested"),
   tRequested: t("requested"),
 
-  scanningText: (function() {
-    const tScanning = this.get("tScanning");
-    const tUntested = this.get("tUntested");
-    const tRequested = this.get("tRequested");
+  scanningText: computed("analysis.{vulnerability.types,file.{dynamicStatus, manual, apiScanProgress}}", function() {
+    const tScanning = this.tScanning;
+    const tUntested = this.tUntested;
+    const tRequested = this.tRequested;
     const types = this.get("analysis.vulnerability.types");
     if (types === undefined) { return []; }
     switch (types[0]) {
@@ -41,10 +43,5 @@ export default Ember.Component.extend({
         return tUntested;
       }
     }
-  }).property(
-    "analysis.vulnerability.types",
-    "analysis.file.dynamicStatus",
-    "analysis.file.manual",
-    "analysis.file.apiScanProgress"
-  )
+  })
 });

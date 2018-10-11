@@ -1,4 +1,4 @@
-import Ember from 'ember';
+import { helper as buildHelper } from '@ember/component/helper';
 
 const SEPERATOR = "-";
 // This function receives the params `params, hash`
@@ -17,7 +17,7 @@ const filterPlatformValues = function(value) {
   return [key, reverse];
 };
 
-const FilterPlatformHelper = Ember.Helper.helper(filterPlatform);
+const FilterPlatformHelper = buildHelper(filterPlatform);
 
 export { filterPlatform, filterPlatformValues };
 

@@ -1,23 +1,24 @@
 // jshint ignore: start
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+
+import Component from '@ember/component';
+import { isEmpty } from '@ember/utils';
 import ENV from 'irene/config/environment';
 import PaginateMixin from 'irene/mixins/paginate';
 import { translationMacro as t } from 'ember-i18n';
 
-const isEmpty = inputValue=> Ember.isEmpty(inputValue);
-
-const PersonaltokenListComponent = Ember.Component.extend(PaginateMixin, {
+const PersonaltokenListComponent = Component.extend(PaginateMixin, {
 
   classNames: ["column","personal-token-component"],
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
 
   // list tokens
 
   targetObject: 'personaltoken',
-  sortProperties: ['created:desc'],
+  sortProperties: ['created:desc'], // eslint-disable-line
 
 
   // create token
@@ -33,19 +34,19 @@ const PersonaltokenListComponent = Ember.Component.extend(PaginateMixin, {
     },
 
     generateToken() {
-      const tokenName = this.get('tokenName');
-      const tTokenCreated = this.get('tTokenCreated');
-      const tEnterTokenName = this.get('tEnterTokenName');
+      const tokenName = this.tokenName;
+      const tTokenCreated = this.tTokenCreated;
+      const tEnterTokenName = this.tEnterTokenName;
 
       for (let inputValue of [tokenName]) {
-        if (isEmpty(inputValue)) { return this.get('notify').error(tEnterTokenName); }
+        if (isEmpty(inputValue)) { return this.notify.error(tEnterTokenName); }
       }
 
       const data =
         {name: tokenName};
 
       this.set('isGeneratingToken', true);
-      this.get('ajax').post(ENV.endpoints.personaltokens, {data})
+      this.ajax.post(ENV.endpoints.personaltokens, {data})
       .then((data) => {
         if(!this.isDestroyed) {
           this.set('isGeneratingToken', false);
@@ -54,11 +55,11 @@ const PersonaltokenListComponent = Ember.Component.extend(PaginateMixin, {
           this.set('tokenName', '');
           this.set('showGenerateTokenModal', false);
         }
-        this.get('notify').success(tTokenCreated);
+        this.notify.success(tTokenCreated);
       }, (error) => {
         if(!this.isDestroyed) {
           this.set('isGeneratingToken', false);
-          this.get("notify").error(error.payload.message);
+          this.notify.error(error.payload.message);
         }
       });
     }
@@ -71,21 +72,21 @@ const PersonaltokenListComponent = Ember.Component.extend(PaginateMixin, {
   tPleaseTryAgain: t('pleaseTryAgain'),
 
   didInsertElement() {
-    const tTokenCopied = this.get('tTokenCopied');
-    const tPleaseTryAgain = this.get('tPleaseTryAgain');
+    const tTokenCopied = this.tTokenCopied;
+    const tPleaseTryAgain = this.tPleaseTryAgain;
     // eslint-disable-next-line no-undef
     const clipboard = new Clipboard('.copy-token');
     this.set('clipboard', clipboard);
 
     clipboard.on('success', (e) => {
-      this.get('notify').info(tTokenCopied);
+      this.notify.info(tTokenCopied);
       e.clearSelection();
     });
-    clipboard.on('error', () => this.get('notify').error(tPleaseTryAgain));
+    clipboard.on('error', () => this.notify.error(tPleaseTryAgain));
   },
 
   willDestroyElement() {
-    const clipboard = this.get('clipboard');
+    const clipboard = this.clipboard;
     clipboard.destroy();
   }
 }

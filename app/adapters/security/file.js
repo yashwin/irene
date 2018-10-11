@@ -9,13 +9,13 @@ export default DRFAdapter.extend(DataAdapterMixin, {
   addTrailingSlashes: false,
 
   query: function query(store, type, q) {
-    let url = `${this.get('host')}/${this.get('namespace')}/projects/${q.projectId}/files?limit=${q.limit}&offset=${q.offset}`;
+    let url = `${this.host}/${this.namespace}/projects/${q.projectId}/files?limit=${q.limit}&offset=${q.offset}`;
     return this.ajax(url, 'GET');
   },
 
   _buildURL: function _buildURL(modelName, id) {
     if(id) {
-      return `${this.get('host')}/${this.get('namespace')}/files/${id}`;
+      return `${this.host}/${this.namespace}/files/${id}`;
     }
   }
 });

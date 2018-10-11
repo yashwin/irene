@@ -1,28 +1,28 @@
 /* jshint ignore:start */
 
-import Ember from 'ember';
+import Component from '@ember/component';
 import { task } from 'ember-concurrency';
 import ENV from 'irene/config/environment';
-import {isNotFoundError} from 'ember-ajax/errors';
+import { isNotFoundError } from 'ember-ajax/errors';
 
-export default Ember.Component.extend({
+export default Component.extend({
 
   isStorageWorking: false,
   isDeviceFarmWorking: false,
 
-  localClassNameBindings: [
+  localClassNameBindings: [ // eslint-disable-line
     'isStorageWorking:storage-operational',
     'isDeviceFarmWorking:devicefarm-operational'],
 
   didInsertElement() {
-    this.get("getStorageStatus").perform();
-    this.get('getDeviceFarmStatus').perform();
+    this.getStorageStatus.perform();
+    this.getDeviceFarmStatus.perform();
   },
 
   getStorageStatus: task(function *() {
     try {
-      let status = yield this.get("ajax").request(ENV.endpoints.status);
-      yield this.get('ajax').request(status.data.storage, { headers:{ 'Authorization': "Basic"}});
+      let status = yield this.ajax.request(ENV.endpoints.status);
+      yield this.ajax.request(status.data.storage, { headers:{ 'Authorization': "Basic"}});
     } catch(error) {
       this.set("isStorageWorking", !!isNotFoundError(error));
     }
@@ -30,7 +30,7 @@ export default Ember.Component.extend({
 
   getDeviceFarmStatus: task(function *() {
     try {
-      yield this.get("ajax").request(ENV.endpoints.ping);
+      yield this.ajax.request(ENV.endpoints.ping);
       this.set("isDeviceFarmWorking", true);
     } catch(error) {
       this.set("isDeviceFarmWorking", false);

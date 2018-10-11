@@ -1,54 +1,55 @@
 import DS from 'ember-data';
 import ENUMS from 'irene/enums';
+import { computed } from '@ember/object';
 
 const Manualscan = DS.Model.extend({
-  appEnv: DS.attr('string'),
-  minOsVersion: DS.attr('string'),
   contact: DS.attr(),
-  loginRequired: DS.attr('boolean'),
   userRoles: DS.attr(),
-  vpnRequired: DS.attr('boolean'),
   vpnDetails: DS.attr(),
+  appEnv: DS.attr('string'),
   appAction: DS.attr('string'),
+  vpnRequired: DS.attr('boolean'),
+  minOsVersion: DS.attr('string'),
+  loginRequired: DS.attr('boolean'),
   additionalComments: DS.attr('string'),
 
-  filteredAppEnv: (function() {
-    const appEnv = parseInt(this.get("appEnv"));
+  filteredAppEnv: computed("appEnv", function() {
+    const appEnv = parseInt(this.appEnv);
     if (isNaN(appEnv)) {
       return ENUMS.APP_ENV.NO_PREFERENCE;
     }
     return appEnv;
-  }).property("appEnv"),
+  }),
 
-  filteredAppAction: (function() {
-    const appAction = parseInt(this.get("appAction"));
+  filteredAppAction: computed("appAction", function() {
+    const appAction = parseInt(this.appAction);
     if (isNaN(appAction)) {
       return ENUMS.APP_ACTION.NO_PREFERENCE;
     }
     return appAction;
-  }).property("appAction"),
+  }),
 
-  showProceedText: (function() {
-    const appAction = this.get("appAction");
+  showProceedText: computed("appAction", function() {
+    const appAction = this.appAction;
     if (appAction === "proceed") {
       return true;
     }
     return false;
-  }).property("appAction"),
+  }),
 
-  loginStatus: (function() {
-    if (this.get("loginRequired")) {
+  loginStatus: computed("loginRequired", function() {
+    if (this.loginRequired) {
       return "yes";
     }
     return "no";
-  }).property("loginRequired"),
+  }),
 
-  vpnStatus: (function() {
-    if (this.get("vpnRequired")) {
+  vpnStatus: computed("vpnRequired", function() {
+    if (this.vpnRequired) {
       return "yes";
     }
     return "no";
-  }).property("vpnRequired")
+  })
 });
 
 export default Manualscan;

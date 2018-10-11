@@ -1,10 +1,12 @@
-import { test, moduleForComponent } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
 
-moduleForComponent('choose-list', 'Integration | Component | choose list', {
-  integration: true
-});
 
-test('it renders', function(assert) {
-  assert.ok(true);
-  assert.equal(this.$().text().trim(), '');
+module('Integration | Component | choose list', function(hooks) {
+  setupRenderingTest(hooks);
+
+  test('it renders', function(assert) {
+    assert.ok(true);
+    assert.dom('*').hasText('');
+  });
 });

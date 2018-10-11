@@ -1,5 +1,6 @@
 import DS from 'ember-data';
 import ENUMS from 'irene/enums';
+import { computed } from '@ember/object';
 
 export default DS.Model.extend({
   findings: DS.attr(),
@@ -25,14 +26,14 @@ export default DS.Model.extend({
   attachments: DS.hasMany('security/attachment'),
   vulnerability: DS.belongsTo('security/vulnerability'),
 
-  isPassed: (function() {
-    const risk = this.get("risk");
+  isPassed: computed("risk", function() {
+    const risk = this.risk;
     return risk !== ENUMS.RISK.NONE;
-  }).property("risk"),
+  }),
 
-  riskLabelClass: (function() {
-    return this.labelClass(this.get("risk"));
-  }).property("risk"),
+  riskLabelClass: computed("risk", function() {
+    return this.labelClass(this.risk);
+  }),
 
   labelClass(risk) {
     switch (risk) {

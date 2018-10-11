@@ -1,47 +1,39 @@
-import Ember from 'ember';
+import { run } from '@ember/runloop';
 import tHelper from 'ember-i18n/helper';
 import localeConfig from 'ember-i18n/config/en';
-import { test, moduleForComponent } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupTest } from 'ember-qunit';
 import { startMirage } from 'irene/initializers/ember-cli-mirage';
 
-moduleForComponent('invitation-accept', 'Integration | Component | invitation accept', {
-  unit: true,
-  needs: [
-    'service:i18n',
-    'service:ajax',
-    'service:notification-messages-service',
-    'service:session',
-    'locale:en/translations',
-    'locale:en/config',
-    'util:i18n/missing-message',
-    'util:i18n/compile-template',
-    'config:environment'
-  ],
-  beforeEach() {
+module('Integration | Component | invitation accept', function(hooks) {
+  setupTest(hooks);
+
+  hooks.beforeEach(function() {
     // set the locale and the config
-    Ember.getOwner(this).lookup('service:i18n').set('locale', 'en');
-    this.register('locale:en/config', localeConfig);
+    this.owner.lookup('service:i18n').set('locale', 'en');
+    this.owner.register('locale:en/config', localeConfig);
 
     // register t helper
-    this.register('helper:t', tHelper);
+    this.owner.register('helper:t', tHelper);
 
     // start Mirage
     this.server = startMirage();
-  },
-  afterEach() {
+  });
+
+  hooks.afterEach(function() {
     // shutdown Mirage
     this.server.shutdown();
-  }
-});
+  });
 
-test('tapping button fires an external action', function(assert) {
+  test('tapping button fires an external action', function(assert) {
 
-  var component = this.subject();
+    var component = this.owner.factoryFor('component:invitation-accept').create();
 
-  Ember.run(function() {
-    component.set("invitation", {invitationUuid: 1});
-    component.send("acceptInvite");
-    assert.equal(component.get("invitation.invitationUuid"),1, "Open");
+    run(function() {
+      component.set("invitation", {invitationUuid: 1});
+      component.send("acceptInvite");
+      assert.equal(component.get("invitation.invitationUuid"),1, "Open");
 
+    });
   });
 });

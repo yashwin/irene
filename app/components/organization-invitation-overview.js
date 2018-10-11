@@ -1,16 +1,17 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import { on } from '@ember/object/evented';
 import { task } from 'ember-concurrency';
 import { translationMacro as t } from 'ember-i18n';
 import ENV from 'irene/config/environment';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-export default Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+export default Component.extend({
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
-  tagName: ['tr'],
+  tagName: ['tr'], // eslint-disable-line
   isDeletingInvitation: false,
   isResendingInvitation: false,
   showDeleteInvitationConfirmBox: false,
@@ -29,12 +30,12 @@ export default Ember.Component.extend({
   /* Resend invitation */
   confirmResend: task(function * () {
     this.set('isResendingInvitation', true);
-    const invite = this.get('invitation');
+    const invite = this.invitation;
     yield invite.resend();
   }).evented(),
 
   confirmResendSucceeded: on('confirmResend:succeeded', function() {
-    this.get('notify').success(this.get('tInvitationReSent'));
+    this.notify.success(this.tInvitationReSent);
     triggerAnalytics('feature', ENV.csb.inviteResend);
 
     this.set('showResendInvitationConfirmBox', false);
@@ -42,14 +43,14 @@ export default Ember.Component.extend({
   }),
 
   confirmResendErrored: on('confirmResend:errored', function(_, error) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (error.errors && error.errors.length) {
       errMsg = error.errors[0].detail || errMsg;
     } else if(error.message) {
       errMsg = error.message;
     }
 
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
 
     this.set('showResendInvitationConfirmBox', false);
     this.set('isResendingInvitation', false);
@@ -66,14 +67,14 @@ export default Ember.Component.extend({
   confirmDelete: task(function * () {
     this.set('isDeletingInvitation', true);
 
-    const invite = this.get('invitation');
+    const invite = this.invitation;
     invite.deleteRecord();
     yield invite.save();
 
   }).evented(),
 
   confirmDeleteSucceeded: on('confirmDelete:succeeded', function() {
-    this.get('notify').success(this.get('tInvitationDeleted'));
+    this.notify.success(this.tInvitationDeleted);
     triggerAnalytics('feature', ENV.csb.inviteDelete);
 
     this.set('showDeleteInvitationConfirmBox', false);
@@ -81,14 +82,14 @@ export default Ember.Component.extend({
   }),
 
   confirmDeleteErrored: on('confirmDelete:errored', function(_, error) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (error.errors && error.errors.length) {
       errMsg = error.errors[0].detail || errMsg;
     } else if(error.message) {
       errMsg = error.message;
     }
 
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
 
     this.set('isDeletingInvitation', false);
   }),
@@ -96,10 +97,10 @@ export default Ember.Component.extend({
 
   actions: {
     confirmResendProxy() {
-      this.get('confirmResend').perform();
+      this.confirmResend.perform();
     },
     confirmDeleteProxy() {
-      this.get('confirmDelete').perform();
+      this.confirmDelete.perform();
     },
   }
 });

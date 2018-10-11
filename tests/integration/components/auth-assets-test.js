@@ -1,14 +1,16 @@
-import { test, moduleForComponent } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-moduleForComponent('auth-assets', 'Integration | Component | auth assets', {
-  integration: true
-});
+module('Integration | Component | auth assets', function(hooks) {
+  setupRenderingTest(hooks);
 
-test('it renders', function(assert) {
-  assert.expect(1);
+  test('it renders', async function(assert) {
+    assert.expect(1);
 
-  this.render(hbs("{{auth-assets}}"));
+    await render(hbs("{{auth-assets}}"));
 
-  assert.equal(this.$().text().trim(), 'Security fanatics at your service');
+    assert.dom('*').hasText('Security fanatics at your service');
+  });
 });

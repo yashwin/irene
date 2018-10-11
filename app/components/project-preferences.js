@@ -1,46 +1,49 @@
-import Ember from 'ember';
 import ENUMS from 'irene/enums';
+import { computed } from '@ember/object';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
+import { filter, uniqBy } from '@ember/object/computed';
 
-const ProjectPreferencesComponent = Ember.Component.extend({
+const ProjectPreferencesComponent = Component.extend({
 
   project: null,
   selectVersion: "0",
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   deviceTypes: ENUMS.DEVICE_TYPE.CHOICES,
 
   tAnyVersion: t("anyVersion"),
 
-  devicePreference: (function() {
-    return this.get("store").queryRecord('device-preference', {id: this.get("profileId")});
-  }).property(),
+  devicePreference: computed(function() {
+    return this.store.queryRecord('device-preference', {id: this.profileId});
+  }),
 
-  devices: (function() {
-    return this.get("store").findAll("available-device");
-  }).property(),
+  devices: computed(function() {
+    return this.store.findAll("available-device");
+  }),
 
-  selectedDeviceType: (function() {
+  selectedDeviceType: computed("devicePreference.deviceType", function() {
     return this.get("devicePreference.deviceType");
-  }).property("devicePreference.deviceType"),
+  }),
 
-  filteredDeviceTypes: (function() {
-    const deviceTypes = this.get("deviceTypes");
+  filteredDeviceTypes: computed("deviceTypes", "devicePreference.deviceType", function() {
+    const deviceTypes = this.deviceTypes;
     const deviceType = this.get("devicePreference.deviceType");
     const unknown = ENUMS.DEVICE_TYPE.UNKNOWN;
     const allDeviceTypes = deviceTypes.filter(type => unknown !== type.value);
     return allDeviceTypes.filter(type => deviceType !== type.value);
-  }).property("deviceTypes", "devicePreference.deviceType"),
-
-  availableDevices: Ember.computed.filter('devices', function(device) {
-    return device.get("platform") === this.get("platform");
   }),
 
-  filteredDevices: Ember.computed("availableDevices", "selectedDeviceType", function() {
-    const availableDevices = this.get("availableDevices");
-    const selectedDeviceType = this.get("selectedDeviceType");
+  availableDevices: filter('devices', function(device) {
+    return device.get("platform") === this.platform;
+  }),
+
+  filteredDevices: computed("availableDevices", "selectedDeviceType", function() {
+    const availableDevices = this.availableDevices;
+    const selectedDeviceType = this.selectedDeviceType;
     return availableDevices.filter((device) => {
       switch (selectedDeviceType) {
         case ENUMS.DEVICE_TYPE.NO_PREFERENCE:
@@ -55,13 +58,13 @@ const ProjectPreferencesComponent = Ember.Component.extend({
     });
   }),
 
-  uniqueDevices: Ember.computed.uniqBy("filteredDevices", 'platformVersion'),
+  uniqueDevices: uniqBy("filteredDevices", 'platformVersion'),
 
-  filteredUniqueDevices: (function() {
-    const uniqueDevices = this.get("uniqueDevices");
+  filteredUniqueDevices: computed("uniqueDevices", "devicePreference.platformVersion", function() {
+    const uniqueDevices = this.uniqueDevices;
     const platformVersion = this.get("devicePreference.platformVersion");
     return uniqueDevices.filter(device => platformVersion !== device.get("platformVersion"));
-  }).property("uniqueDevices", "devicePreference.platformVersion"),
+  }),
 
   actions: {
 
@@ -77,10 +80,10 @@ const ProjectPreferencesComponent = Ember.Component.extend({
     },
 
     versionSelected() {
-      const selectVersion = this.get("selectVersion");
-      const selectedDeviceType = this.get("selectedDeviceType");
+      const selectVersion = this.selectVersion;
+      const selectedDeviceType = this.selectedDeviceType;
 
-      const profileId = this.get("profileId");
+      const profileId = this.profileId;
       const devicePreferences = [ENV.endpoints.profiles, profileId, ENV.endpoints.devicePreferences].join('/');
       const data = {
         device_type: selectedDeviceType,
@@ -88,7 +91,7 @@ const ProjectPreferencesComponent = Ember.Component.extend({
       };
       this.set("showStatus", true);
       this.set("isSavingPreference", true);
-      this.get("ajax").put(devicePreferences, {data})
+      this.ajax.put(devicePreferences, {data})
       .then(() => {
         if(!this.isDestroyed) {
           this.set("isSavingPreference", false);

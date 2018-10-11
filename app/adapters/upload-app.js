@@ -1,9 +1,8 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
 import DRFAdapter from './drf';
 import ENV from 'irene/config/environment';
 import DataAdapterMixin from 'ember-simple-auth/mixins/data-adapter-mixin';
 import { underscore } from '@ember/string';
-const {inject: {service}} = Ember;
 
 export default DRFAdapter.extend(DataAdapterMixin, {
   host: ENV.host,
@@ -15,7 +14,7 @@ export default DRFAdapter.extend(DataAdapterMixin, {
     return underscore(type);
   },
   urlForQueryRecord(query, modelName) {
-    return `${this.get('host')}/${this.get('namespace')}/organizations/${this.get('organization').selected.id}/${this.pathForType(modelName)}`;
+    return `${this.host}/${this.namespace}/organizations/${this.organization.selected.id}/${this.pathForType(modelName)}`;
   },
   urlForUpdateRecord(id, modelName){
     return this.urlForQueryRecord(null, modelName);

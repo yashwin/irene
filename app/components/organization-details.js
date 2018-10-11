@@ -1,17 +1,19 @@
-import Ember from 'ember';
+import { computed } from '@ember/object';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import { on } from '@ember/object/evented';
 import { task } from 'ember-concurrency';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-export default Ember.Component.extend({
-    i18n: Ember.inject.service(),
-    ajax: Ember.inject.service(),
-    me: Ember.inject.service(),
-    organization: Ember.inject.service('organization'),
-    routing: Ember.inject.service('-routing'),
-    notify: Ember.inject.service('notification-messages-service'),
+export default Component.extend({
+    i18n: service(),
+    ajax: service(),
+    me: service(),
+    organization: service('organization'),
+    routing: service('-routing'),
+    notify: service('notification-messages-service'),
 
     isNamespaces: true,
     isMembers: false,
@@ -48,55 +50,55 @@ export default Ember.Component.extend({
     },
 
     /* Check if org name is empty */
-    orgNameDoesNotExist: Ember.computed('organization', function() {
-      return this.get('organization').selected.get('name') === '';
+    orgNameDoesNotExist: computed('organization', function() {
+      return this.organization.selected.get('name') === '';
     }),
 
 
     /* Edit organization name */
     updateOrgName: task(function * () {
-      const org = this.get('organization').selected;
+      const org = this.organization.selected;
       yield org.set('name', org.get('name'));
       yield org.save()
     }).evented(),
 
     updateOrgNameSucceeded: on('updateOrgName:succeeded', function() {
-      this.get('notify').success(this.get('tOrganizationNameUpdated'));
+      this.notify.success(this.tOrganizationNameUpdated);
       this.send("cancelEditing");
       this.set('orgNameDoesNotExist', false);
       triggerAnalytics('feature', ENV.csb.updateOrgName);
     }),
 
     updateOrgNameErrored: on('updateOrgName:errored', function(_, err) {
-      let errMsg = this.get('tPleaseTryAgain');
+      let errMsg = this.tPleaseTryAgain;
       if (err.errors && err.errors.length) {
         errMsg = err.errors[0].detail || errMsg;
       } else if(err.message) {
         errMsg = err.message;
       }
 
-      this.get("notify").error(errMsg);
+      this.notify.error(errMsg);
     }),
 
 
     /* Set active tab */
-    namespaceClass: Ember.computed('isNamespaces', function() {
-      if (this.get('isNamespaces')){
+    namespaceClass: computed('isNamespaces', function() {
+      if (this.isNamespaces){
         return 'is-active';
       }
     }),
-    memberClass: Ember.computed('isMembers', function() {
-      if (this.get('isMembers')){
+    memberClass: computed('isMembers', function() {
+      if (this.isMembers){
         return 'is-active';
       }
     }),
-    teamClass: Ember.computed('isTeams', function() {
-      if (this.get('isTeams')){
+    teamClass: computed('isTeams', function() {
+      if (this.isTeams){
         return 'is-active';
       }
     }),
-    settingsClass: Ember.computed('isSettings', function() {
-      if (this.get('isSettings')){
+    settingsClass: computed('isSettings', function() {
+      if (this.isSettings){
         return 'is-active';
       }
     }),

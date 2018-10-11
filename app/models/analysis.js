@@ -1,7 +1,9 @@
-import Ember from 'ember';
 import DS from 'ember-data';
 import ENUMS from 'irene/enums';
+import { isEmpty } from '@ember/utils';
+import { computed } from '@ember/object';
 import { translationMacro as t } from 'ember-i18n';
+import { equal, notEmpty } from '@ember/object/computed';
 
 const Analysis = DS.Model.extend({
   findings: DS.attr(),
@@ -20,8 +22,7 @@ const Analysis = DS.Model.extend({
   vulnerability: DS.belongsTo('vulnerability'),
   file: DS.belongsTo('file', {inverse: 'analyses'}),
 
-
-  hascvccBase: Ember.computed.equal('cvssVersion', 3),
+  hascvccBase: equal('cvssVersion', 3),
 
   tLow: t("low"),
   tNone: t("none"),
@@ -29,23 +30,23 @@ const Analysis = DS.Model.extend({
   tMedium: t("medium"),
   tCritical: t("critical"),
 
-  isOverriddenRisk: Ember.computed.notEmpty('overriddenRisk'),
+  isOverriddenRisk: notEmpty('overriddenRisk'),
 
-  isScanning: ( function() {
-    const risk = this.get("computedRisk");
+  isScanning: computed("computedRisk", function() {
+    const risk = this.computedRisk;
     return risk === ENUMS.RISK.UNKNOWN;
-  }).property("computedRisk"),
+  }),
 
   hasType(type) {
     const types = this.get("vulnerability.types");
-    if (Ember.isEmpty(types)) {
+    if (isEmpty(types)) {
       return false;
     }
     return types.includes(type);
   },
 
-  isRisky: (function() {
-    const risk = this.get("computedRisk");
+  isRisky: computed("computedRisk", function() {
+    const risk = this.computedRisk;
     return ![ENUMS.RISK.NONE, ENUMS.RISK.UNKNOWN].includes(risk);
   }).property("computedRisk"),
 
@@ -57,21 +58,21 @@ const Analysis = DS.Model.extend({
     }
   },
 
-  riskIconClass: (function() {
-    return this.iconClass(this.get("risk"));
-  }).property("risk"),
+  riskIconClass: computed("risk", function() {
+    return this.iconClass(this.risk);
+  }),
 
-  overriddenRiskIconClass: (function() {
-    return this.iconClass(this.get("overriddenRisk"));
-  }).property("overriddenRisk"),
+  overriddenRiskIconClass: computed("overriddenRisk", function() {
+    return this.iconClass(this.overriddenRisk);
+  }),
 
-  riskLabelClass: (function() {
-    return this.labelClass(this.get("risk"));
-  }).property("risk"),
+  riskLabelClass: computed(function() {
+    return this.labelClass(this.risk);
+  }),
 
-  overriddenRiskLabelClass: (function() {
-    return this.labelClass(this.get("overriddenRisk"));
-  }).property("overriddenRisk"),
+  overriddenRiskLabelClass: computed("overriddenRisk", function() {
+    return this.labelClass(this.overriddenRisk);
+  }),
 
   labelClass(risk) {
     const cls = 'tag';

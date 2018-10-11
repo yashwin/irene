@@ -1,4 +1,5 @@
 import DS from 'ember-data';
+import { computed } from '@ember/object';
 import BaseModeMixin from 'irene/mixins/base-model';
 
 const Submission = DS.Model.extend(BaseModeMixin, {
@@ -11,11 +12,11 @@ const Submission = DS.Model.extend(BaseModeMixin, {
   packageName: DS.attr('string'),
   statusHumanized: DS.attr('string'),
 
-  hasReason: (function() {
-    const reason = this.get("reason");
+  hasReason: computed("reason", function() {
+    const reason = this.reason;
     return (reason != null ? reason.length : undefined) > 0;
-  }).property("reason")
-}
-);
+  })
+
+});
 
 export default Submission;

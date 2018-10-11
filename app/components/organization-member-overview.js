@@ -1,15 +1,16 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import { on } from '@ember/object/evented';
 import { task } from 'ember-concurrency';
 import { translationMacro as t } from 'ember-i18n';
 import ENUMS from 'irene/enums';
 
-export default Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  me: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+export default Component.extend({
+  i18n: service(),
+  me: service(),
+  notify: service('notification-messages-service'),
 
-  tagName: ["tr"],
+  tagName: ["tr"], // eslint-disable-line
   roles: ENUMS.ORGANIZATION_ROLES.CHOICES.slice(0, -1),
   member: null,
   organization: null,
@@ -22,25 +23,25 @@ export default Ember.Component.extend({
   selectMemberRole: task(function * () {
     const role = parseInt(this.$('#org-user-role').val());
 
-    const member = yield this.get('member');
+    const member = yield this.member;
     member.set('role', role);
     yield member.save();
 
   }).evented(),
 
   selectMemberRoleSucceeded: on('selectMemberRole:succeeded', function() {
-    this.get('notify').success(this.get('tUserRoleUpdated'));
+    this.notify.success(this.tUserRoleUpdated);
   }),
 
   selectMemberRoleErrored: on('selectMemberRole:errored', function(_, err) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (err.errors && err.errors.length) {
       errMsg = err.errors[0].detail || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
 
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
   }),
 
 });

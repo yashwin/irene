@@ -1,31 +1,33 @@
-import Ember from 'ember';
 import ENUMS from 'irene/enums';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
 
-const CompareSummaryComponent = Ember.Component.extend({
-  i18n: Ember.inject.service(),
+const CompareSummaryComponent = Component.extend({
+  i18n: service(),
   comparison: null,
 
-  tagName: ["tr"],
+  tagName: ["tr"], // eslint-disable-line
 
   tAnalyzing: t("analyzing"),
   tUnchanged: t("unchanged"),
   tImproved: t("improved"),
   tWorsened: t("worsened"),
 
-  vulnerability: (function() {
-    return this.get("comparison")["vulnerability"];
-  }).property("comparison"),
+  vulnerability: computed("comparison", function() {
+    return this.comparison["vulnerability"];
+  }),
 
-  file1Analysis: (function() {
-    return this.get("comparison")['analysis1'];
-  }).property("comparison"),
+  file1Analysis: computed("comparison", function() {
+    return this.comparison['analysis1'];
+  }),
 
-  file2Analysis: (function() {
-    return this.get("comparison")['analysis2'];
-  }).property("comparison"),
+  file2Analysis: computed("comparison", function() {
+    return this.comparison['analysis2'];
+  }),
 
-  compareColor: (function() {
+  compareColor: computed("file1Analysis.computedRisk", "file2Analysis.computedRisk", function() {
     const cls = 'tag';
     const file1Risk = this.get("file1Analysis.computedRisk");
     const file2Risk = this.get("file2Analysis.computedRisk");
@@ -38,15 +40,15 @@ const CompareSummaryComponent = Ember.Component.extend({
     } else if (file1Risk > file2Risk) {
       return `${cls} is-critical`;
     }
-  }).property("file1Analysis.computedRisk", "file2Analysis.computedRisk"),
+  }),
 
-  compareText: (function() {
+  compareText: computed("file1Analysis.computedRisk", "file2Analysis.computedRisk", function () {
     let file1Risk = this.get("file1Analysis.computedRisk");
     let file2Risk = this.get("file2Analysis.computedRisk");
-    const tAnalyzing = this.get("tAnalyzing");
-    const tUnchanged = this.get("tUnchanged");
-    const tImproved = this.get("tImproved");
-    const tWorsened = this.get("tWorsened");
+    const tAnalyzing = this.tAnalyzing;
+    const tUnchanged = this.tUnchanged;
+    const tImproved = this.tImproved;
+    const tWorsened = this.tWorsened;
 
     if ([file1Risk, file2Risk].includes(ENUMS.RISK.UNKNOWN)) {
       return tAnalyzing;
@@ -59,7 +61,7 @@ const CompareSummaryComponent = Ember.Component.extend({
     } else {
       return "-";
     }
-  }).property("file1Analysis.computedRisk", "file2Analysis.computedRisk")
+  })
 });
 
 

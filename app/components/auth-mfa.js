@@ -1,15 +1,17 @@
 // jshint ignore: start
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 
 const isValidOTP = otp => otp.length > 5;
 
-const AuthMfaComponent = Ember.Component.extend({
+const AuthMfaComponent = Component.extend({
 
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   user: null,
   showMFAIntro: true,
   showBarCode: false,
@@ -65,18 +67,18 @@ const AuthMfaComponent = Ember.Component.extend({
     },
 
     enableMFA() {
-      const tEnterOTP = this.get("tEnterOTP");
-      const tMFAEnabled = this.get("tMFAEnabled");
-      const enableMFAOTP = this.get("enableMFAOTP");
+      const tEnterOTP = this.tEnterOTP;
+      const tMFAEnabled = this.tMFAEnabled;
+      const enableMFAOTP = this.enableMFAOTP;
       for (let otp of [enableMFAOTP]) {
-        if (!isValidOTP(otp)) { return this.get("notify").error(tEnterOTP); }
+        if (!isValidOTP(otp)) { return this.notify.error(tEnterOTP); }
       }
       const data =
         {otp: enableMFAOTP};
       this.set("isEnablingMFA", true);
-      this.get("ajax").post(ENV.endpoints.enableMFA, {data})
+      this.ajax.post(ENV.endpoints.enableMFA, {data})
       .then(() => {
-        this.get("notify").success(tMFAEnabled);
+        this.notify.success(tMFAEnabled);
         if(!this.isDestroyed) {
           this.set("enableMFAOTP", "");
           this.set("showMFAEnableModal", false);
@@ -85,24 +87,24 @@ const AuthMfaComponent = Ember.Component.extend({
       }, (error) => {
         if(!this.isDestroyed) {
           this.set("isEnablingMFA", false);
-          this.get("notify").error(error.payload.message);
+          this.notify.error(error.payload.message);
         }
       });
     },
 
     disableMFA() {
-      const tEnterOTP = this.get("tEnterOTP");
-      const tMFADisabled = this.get("tMFADisabled");
-      const disableMFAOTP = this.get("disableMFAOTP");
+      const tEnterOTP = this.tEnterOTP;
+      const tMFADisabled = this.tMFADisabled;
+      const disableMFAOTP = this.disableMFAOTP;
       for (let otp of [disableMFAOTP]) {
-        if (!isValidOTP(otp)) { return this.get("notify").error(tEnterOTP); }
+        if (!isValidOTP(otp)) { return this.notify.error(tEnterOTP); }
       }
       const data =
         {otp: disableMFAOTP};
       this.set("isDisablingMFA", true);
-      this.get("ajax").post(ENV.endpoints.disableMFA, {data})
+      this.ajax.post(ENV.endpoints.disableMFA, {data})
       .then(() => {
-        this.get("notify").success(tMFADisabled);
+        this.notify.success(tMFADisabled);
         if(!this.isDestroyed) {
           this.set("disableMFAOTP", "");
           this.set("showMFADisableModal", false);
@@ -111,7 +113,7 @@ const AuthMfaComponent = Ember.Component.extend({
       }, (error) => {
         if(!this.isDestroyed) {
           this.set("isDisablingMFA", false);
-          this.get("notify").error(error.payload.message);
+          this.notify.error(error.payload.message);
         }
       });
     }

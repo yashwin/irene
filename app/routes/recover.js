@@ -1,7 +1,7 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
 import config from 'irene/config/environment';
 
-const RecoverRoute = Ember.Route.extend({
+const RecoverRoute = Route.extend({
   title: `Recover Password${config.platform}`});
 
 export default RecoverRoute;

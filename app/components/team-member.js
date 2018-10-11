@@ -1,13 +1,14 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 
-const TeamMemberComponent = Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const TeamMemberComponent = Component.extend({
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   organizationTeam: null,
-  tagName: ["tr"],
+  tagName: "tr",
 
   isRemovingMember: false,
 
@@ -16,27 +17,27 @@ const TeamMemberComponent = Ember.Component.extend({
   tTeamMemberRemoved: t("teamMemberRemoved"),
 
   promptCallback(promptedItem) {
-    const tTeamMember = this.get("tTeamMember");
-    const tTeamMemberRemoved = this.get("tTeamMemberRemoved");
-    const tEnterRightUserName = this.get("tEnterRightUserName");
-    const teamMember = this.get("member");
+    const tTeamMember = this.tTeamMember;
+    const tTeamMemberRemoved = this.tTeamMemberRemoved;
+    const tEnterRightUserName = this.tEnterRightUserName;
+    const teamMember = this.member;
     if (promptedItem !== teamMember) {
-      return this.get("notify").error(tEnterRightUserName);
+      return this.notify.error(tEnterRightUserName);
     }
     const teamId = this.get("organizationTeam.id");
     const orgId = this.get("organizationTeam.organization.id");
     const url = [ENV.endpoints.organizations, orgId, ENV.endpoints.teams, teamId, ENV.endpoints.members, teamMember].join('/');
     this.set("isRemovingMember", true);
-    this.get("ajax").delete(url)
+    this.ajax.delete(url)
     .then((data) => {
-      this.get("notify").success(`${tTeamMember} ${teamMember} ${tTeamMemberRemoved}`);
+      this.notify.success(`${tTeamMember} ${teamMember} ${tTeamMemberRemoved}`);
       if(!this.isDestroyed) {
         this.set("isRemovingMember", false);
         this.store.pushPayload(data);
       }
     }, (error) => {
       this.set("isRemovingMember", false);
-      this.get("notify").error(error.payload.message);
+      this.notify.error(error.payload.message);
     });
   },
 

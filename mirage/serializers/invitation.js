@@ -1,5 +1,5 @@
 import { JSONAPISerializer } from 'ember-cli-mirage';
 
 export default JSONAPISerializer.extend({
-  include: ['user','project']
+  include: ['user', 'project'] // eslint-disable-line
 });

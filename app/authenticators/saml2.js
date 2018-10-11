@@ -1,4 +1,5 @@
-import Ember from 'ember';
+import { getOwner } from '@ember/application';
+import { Promise } from 'rsvp';
 import IreneAuth from './irene';
 import ENV from 'irene/config/environment';
 
@@ -13,9 +14,9 @@ const processData = data => {
 
 export default IreneAuth.extend({
   authenticate(ssotoken) {
-    return new Ember.RSVP.Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const url = ENV['endpoints']['saml2Login'];
-      this.get("ajax").post(
+      this.ajax.post(
         url, { data: {token: ssotoken}}
       ).then((data) => {
         data = processData(data);
@@ -26,9 +27,9 @@ export default IreneAuth.extend({
         if(error.payload.message) {
           msg = "Login failed: " + error.payload.message;
         }
-        this.get("notify").error(msg);
+        this.notify.error(msg);
 
-        const authenticatedRoute = Ember.getOwner(this).lookup("route:authenticated");
+        const authenticatedRoute = getOwner(this).lookup("route:authenticated");
         authenticatedRoute.transitionTo('login');
         return reject(msg);
       });

@@ -1,4 +1,5 @@
 import DS from 'ember-data';
+import { computed } from '@ember/object';
 
 const Plan = DS.Model.extend({
   planId: DS.attr('string'),
@@ -15,10 +16,11 @@ const Plan = DS.Model.extend({
   halfYearlyPrice: DS.attr('string'),
   yearlyPrice: DS.attr('string'),
 
-  descriptionItems:(function() {
-    const description = this.get("description");
+  descriptionItems: computed("description", function() {
+    const description = this.description;
     return (description != null ? description.split(",") : undefined);
-  }).property("description")
+  })
+
 });
 
 export default Plan;

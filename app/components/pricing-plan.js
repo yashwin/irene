@@ -1,39 +1,41 @@
-import Ember from 'ember';
 import ENUMS from 'irene/enums';
+import { computed } from '@ember/object';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
+import { inject as service } from '@ember/service';
 import { translationMacro as t } from 'ember-i18n';
 
-const PricingPlanComponent = Ember.Component.extend({
+const PricingPlanComponent = Component.extend({
 
   plan: null,
   paymentDuration: ENUMS.PAYMENT_DURATION.MONTHLY,
   classNames: ["column", "is-one-third"],
   planQuantity: 1,
-  i18n: Ember.inject.service(),
+  i18n: service(),
 
   tApp: t("app"),
   tScan: t("scan"),
 
-  planText: (function() {
-    const tApp = this.get("tApp");
-    const tScan = this.get("tScan");
+  planText: computed("plan", function() {
+    const tApp = this.tApp;
+    const tScan = this.tScan;
     const planId = this.get("plan.planId");
     if (planId === "default_per_scan") {
       return tScan;
     }
     return tApp;
-  }).property("plan"),
+  }),
 
-  updatedPrice: (function() {
-    const totalPrice = this.get("totalPrice");
-    const planQuantity = this.get("planQuantity");
+  updatedPrice: computed("totalPrice", "planQuantity", function() {
+    const totalPrice = this.totalPrice;
+    const planQuantity = this.planQuantity;
     const updatedPrice = totalPrice * planQuantity;
     return `Pay $${updatedPrice} USD`;
-  }).property("totalPrice", "planQuantity"),
+  }),
 
-  totalPrice: (function() {
+  totalPrice: computed("paymentDuration", "plan.{monthlyPrice, quarterlyPrice, halfYearlyPrice, yearlyPrice", function() {
     let price;
-    const duration = this.get("paymentDuration");
+    const duration = this.paymentDuration;
     switch (duration) {
       case ENUMS.PAYMENT_DURATION.MONTHLY:
         price = this.get("plan.monthlyPrice");
@@ -49,14 +51,14 @@ const PricingPlanComponent = Ember.Component.extend({
         break;
     }
     return price;
-  }).property("paymentDuration", "plan.monthlyPrice", "plan.quarterlyPrice", "plan.halfYearlyPrice", "plan.yearlyPrice"),
+  }),
 
   actions: {
 
     initiatePayment() {
       let url;
-      const duration = this.get("paymentDuration");
-      const planQuantity = this.get("planQuantity");
+      const duration = this.paymentDuration;
+      const planQuantity = this.planQuantity;
       switch (duration) {
         case ENUMS.PAYMENT_DURATION.MONTHLY:
           url = this.get("plan.monthlyUrl");
@@ -82,7 +84,7 @@ const PricingPlanComponent = Ember.Component.extend({
     },
 
     decrementPlanQuantity() {
-      const planQuantity = this.get("planQuantity");
+      const planQuantity = this.planQuantity;
       if (planQuantity > 1) {
         this.decrementProperty("planQuantity");
       }

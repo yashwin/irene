@@ -1,7 +1,11 @@
-import Ember from 'ember';
+import { sort, alias, gt } from '@ember/object/computed';
+import { isEmpty } from '@ember/utils';
+import { once } from '@ember/runloop';
+import { observer, computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 import ENV from 'irene/config/environment';
 
-const PaginateMixin = Ember.Mixin.create({
+const PaginateMixin = Mixin.create({
 
   offset: 0,
   meta: null,
@@ -16,7 +20,7 @@ const PaginateMixin = Ember.Mixin.create({
     this.incrementProperty("version");
   },
 
-  versionTrigger: Ember.observer('limit', 'offset', "targetObject", "extraQueryStrings", function() {
+  versionTrigger: observer('limit', 'offset', "targetObject", "extraQueryStrings", function() {
     return (() => {
       const result = [];
       for (let property of ['limit', 'offset', "targetObject", "extraQueryStrings"]) {
@@ -26,7 +30,7 @@ const PaginateMixin = Ember.Mixin.create({
         const propertyChanged = propertyOldValue !== propertyNewValue;
         if (propertyChanged) {
           this.set(propertyOldName, propertyNewValue);
-          result.push(Ember.run.once(this, 'versionIncrementer'));
+          result.push(once(this, 'versionIncrementer'));
         } else {
           result.push(undefined);
         }
@@ -35,35 +39,35 @@ const PaginateMixin = Ember.Mixin.create({
     })();
   }),
 
-  objects: ( function() {
+  objects: computed("version", function() {
     let query;
     window.scrollTo(0, 0);
-    if (this.get('isJsonApiPagination')) {
-      const query_limit = this.get("limit");
-      const query_offset = this.get("offset");
+    if (this.isJsonApiPagination) {
+      const query_limit = this.limit;
+      const query_offset = this.offset;
       query = {
-        'page[limit]': this.get("limit"),
+        'page[limit]': this.limit,
         'page[offset]': query_limit * query_offset
       };
     } else {
       query = {
-        limit: this.get("limit"),
-        offset: this.get("offset")
+        limit: this.limit,
+        offset: this.offset
       };
     }
-    const extraQueryStrings = this.get("extraQueryStrings");
-    if (!Ember.isEmpty(extraQueryStrings)) {
+    const extraQueryStrings = this.extraQueryStrings;
+    if (!isEmpty(extraQueryStrings)) {
       const extraQueries = JSON.parse(extraQueryStrings);
       for (let key in extraQueries) {
         const value = extraQueries[key];
         query[key] = value;
       }
     }
-    const targetObject = this.get("targetObject");
-    if(this.get('isDRFPagination')) {
-      query.offset = query.offset * (this.get("offsetMultiplier") || 1);
+    const targetObject = this.targetObject;
+    if(this.isDRFPagination) {
+      query.offset = query.offset * (this.offsetMultiplier || 1);
     }
-    const objects = this.get('store').query(targetObject, query);
+    const objects = this.store.query(targetObject, query);
     objects.then((result) => {
       const { meta } = result;
       if (result.links && result.meta.pagination) {
@@ -81,14 +85,14 @@ const PaginateMixin = Ember.Mixin.create({
       return this.set("meta", meta);
     });
     return objects;
-  }).property("version"),
+  }),
 
-  sortedObjects: Ember.computed.sort('objects', 'sortProperties'),
-  objectCount: Ember.computed.alias('objects.length'),
-  hasObjects: Ember.computed.gt('objectCount', 0),
+  sortedObjects: sort('objects', 'sortProperties'),
+  objectCount: alias('objects.length'),
+  hasObjects: gt('objectCount', 0),
 
-  maxOffset: Ember.computed("meta.total", "limit", function() {
-    const limit = this.get("limit");
+  maxOffset: computed("meta.total", "limit", function() {
+    const limit = this.limit;
     const total = this.get("meta.total" || 0);
     if (total === 0) {
       return 0;
@@ -96,9 +100,9 @@ const PaginateMixin = Ember.Mixin.create({
     return Math.ceil(total/limit) - 1;
   }),  // `-1` because offset starts from 0
 
-  pages: Ember.computed("maxOffset", "offset", function() {
-    const offset = this.get("offset");
-    const maxOffset = this.get("maxOffset");
+  pages: computed("maxOffset", "offset", function() {
+    const offset = this.offset;
+    const maxOffset = this.maxOffset;
     let startPage = 0;
     let stopPage = maxOffset;
     let offsetDiffStart = 0;
@@ -129,22 +133,22 @@ const PaginateMixin = Ember.Mixin.create({
     return __range__(startPage, stopPage, true);
 }),
 
-  preDot: Ember.computed("offset", function() {
-    const offset = this.get("offset");
+  preDot: computed("offset", function() {
+    const offset = this.offset;
     return (offset - ENV.paginate.pagePadding) > 0;
   }),
 
-  postDot: Ember.computed("offset", "maxOffset", function() {
-    const offset = this.get("offset");
-    const maxOffset = this.get("maxOffset");
+  postDot: computed("offset", "maxOffset", function() {
+    const offset = this.offset;
+    const maxOffset = this.maxOffset;
     return (offset + ENV.paginate.pagePadding) < maxOffset;
   }),
 
-  hasPrevious: Ember.computed.gt("offset", 0),
+  hasPrevious: gt("offset", 0),
 
-  hasNext: Ember.computed('offset', 'maxOffset', function() {
-    const offset = this.get("offset");
-    const maxOffset = this.get("maxOffset");
+  hasNext: computed('offset', 'maxOffset', function() {
+    const offset = this.offset;
+    const maxOffset = this.maxOffset;
     return offset < maxOffset;
   }),
 
@@ -160,7 +164,7 @@ const PaginateMixin = Ember.Mixin.create({
 
     gotoPagePrevious() {
       this.decrementProperty("offset");
-      this.send("gotoPage", this.get("offset"));
+      this.send("gotoPage", this.offset);
     },
 
     gotoPage(offset) {
@@ -169,11 +173,11 @@ const PaginateMixin = Ember.Mixin.create({
 
     gotoPageNext() {
       this.incrementProperty("offset");
-      this.send("gotoPage", this.get("offset"));
+      this.send("gotoPage", this.offset);
     },
 
     gotoPageLast() {
-      this.send("gotoPage", this.get("maxOffset"));
+      this.send("gotoPage", this.maxOffset);
     }
   }
 });

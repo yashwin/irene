@@ -1,16 +1,19 @@
-import Ember from 'ember';
 import DS from 'ember-data';
+import { isEmpty } from '@ember/utils';
+import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
+
 
 export default DS.Model.extend({
   apiUrlFilters: DS.attr('string'),
 
-  apiUrlFilterItems:(function() {
-    const apiUrlFilters = this.get("apiUrlFilters");
-    if (!Ember.isEmpty(apiUrlFilters)) {
+  apiUrlFilterItems: computed("apiUrlFilters", function() {
+    const apiUrlFilters = this.apiUrlFilters;
+    if (!isEmpty(apiUrlFilters)) {
       return (apiUrlFilters != null ? apiUrlFilters.split(",") : undefined);
     }
-  }).property("apiUrlFilters"),
+  }),
 
-  hasApiUrlFilters: Ember.computed.alias('apiUrlFilterItems.length'),
+  hasApiUrlFilters: alias('apiUrlFilterItems.length')
 
 });

@@ -1,17 +1,19 @@
-import Ember from 'ember';
+import Component from '@ember/component';
 import { task } from 'ember-concurrency';
+import { computed } from '@ember/object';
 import { on } from '@ember/object/evented';
-import { translationMacro as t } from 'ember-i18n';
 import ENV from 'irene/config/environment';
+import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-export default Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  realtime: Ember.inject.service(),
-  me: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+export default Component.extend({
+  i18n: service(),
+  realtime: service(),
+  me: service(),
+  notify: service('notification-messages-service'),
 
-  tagName: ['tr'],
+  tagName: ['tr'], // eslint-disable-line
   showRemoveProjectConfirm: false,
   isRemovingProject: false,
 
@@ -21,37 +23,36 @@ export default Ember.Component.extend({
 
 
   /* Fetch project for the given id */
-  teamProject: (function() {
+  teamProject: computed('project.id', function() {
     const id = this.get('project.id');
-    return this.get('store').queryRecord('project', {id});
-  }).property('project.id'),
-
+    return this.store.queryRecord('project', {id});
+  }),
 
   /* Watch for allowEdit input */
-  watchProjectWrite: (function(){
-    this.get('changeProjectWrite').perform();
+  watchProjectWrite: computed(function() {
+    this.changeProjectWrite.perform();
   }).observes('project.write'),
 
 
   /* Save project-write value */
   changeProjectWrite: task(function * () {
-    const prj = this.get('project');
+    const prj = this.project;
     yield prj.updateProject(this.get('team.id'));
   }).evented(),
 
   changeProjectWriteSucceeded: on('changeProjectWrite:succeeded', function() {
-    this.get('notify').success(this.get('tPermissionChanged'));
+    this.notify.success(this.tPermissionChanged);
   }),
 
   changeProjectWriteErrored: on('changeProjectWrite:errored', function(_, err) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (err.errors && err.errors.length) {
       errMsg = err.errors[0].detail || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
 
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
   }),
 
 
@@ -65,39 +66,39 @@ export default Ember.Component.extend({
   removeProject: task(function * () {
     this.set('isRemovingProject', true);
 
-    const prj = this.get('project');
+    const prj = this.project;
     const teamId = this.get('team.id');
     yield prj.deleteProject(teamId);
-    yield this.get('store').unloadRecord(prj);
+    yield this.store.unloadRecord(prj);
 
   }).evented(),
 
   removeProjectSucceeded: on('removeProject:succeeded', function() {
-    this.get('notify').success(this.get('tProjectRemoved'));
+    this.notify.success(this.tProjectRemoved);
     triggerAnalytics('feature', ENV.csb.teamProjectRemove);
 
     this.set('showRemoveProjectConfirm', false);
     this.set('isRemovingProject', false);
 
-    this.get('realtime').incrementProperty('OrganizationNonTeamProjectCounter');
+    this.realtime.incrementProperty('OrganizationNonTeamProjectCounter');
   }),
 
   removeProjectErrored: on('removeProject:errored', function(_, err) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (err.errors && err.errors.length) {
       errMsg = err.errors[0].detail || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
 
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
     this.set('isRemovingProject', false);
   }),
 
 
   actions: {
     removeProjectProxy() {
-      this.get('removeProject').perform();
+      this.removeProject.perform();
     }
   }
 

@@ -10,9 +10,9 @@ export default DRFAdapter.extend(DataAdapterMixin, {
 
   _buildURL: function _buildURL(modelName, id) {
     if(id) {
-      return `${this.get('host')}/${this.get('namespace')}/attachments/${id}`;
+      return `${this.host}/${this.namespace}/attachments/${id}`;
     }
-    return `${this.get('host')}/${this.get('namespace')}/attachments`;
+    return `${this.host}/${this.namespace}/attachments`;
   }
 
 });

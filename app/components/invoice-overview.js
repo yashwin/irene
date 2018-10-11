@@ -1,12 +1,13 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 
-const InvoiceOverviewComponent = Ember.Component.extend({
+const InvoiceOverviewComponent = Component.extend({
 
   invoice: null,
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
-  tagName:["tr"],
+  ajax: service(),
+  notify: service('notification-messages-service'),
+  tagName: ["tr"], // eslint-disable-line
 
   isDownloadingInvoice: false,
 
@@ -15,7 +16,7 @@ const InvoiceOverviewComponent = Ember.Component.extend({
       const downloadUrl = this.get("invoice.downloadUrl");
       this.set("isDownloadingInvoice", true);
       const url = new URL(downloadUrl, ENV.host).href
-      this.get("ajax").request(url)
+      this.ajax.request(url)
       .then((result) => {
         if(!this.isDestroyed) {
           window.location = result.url;
@@ -23,7 +24,7 @@ const InvoiceOverviewComponent = Ember.Component.extend({
         }
       }, () => {
         this.set("isSavingStatus", false);
-        this.get("notify").error("Sorry something went wrong, please try again");
+        this.notify.error("Sorry something went wrong, please try again");
       });
     }
   }

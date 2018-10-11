@@ -10,10 +10,10 @@ export default DRFAdapter.extend(DataAdapterMixin, {
 
   _buildURL: function _buildURL(modelName, id) {
     if(id) {
-      return `${this.get('host')}/${this.get('namespace')}/analyses/${id}`;
+      return `${this.host}/${this.namespace}/analyses/${id}`;
     }
     else {
-      return `${this.get('host')}/${this.get('namespace')}/analyses`
+      return `${this.host}/${this.namespace}/analyses`;
     }
   }
 });

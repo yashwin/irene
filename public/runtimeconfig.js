@@ -1,2 +1,2 @@
-var runtimeGlobalConfig = {
+var runtimeGlobalConfig = { // eslint-disable-line
 }

@@ -1,12 +1,16 @@
-import Ember from 'ember';
+import { isEmpty } from '@ember/utils';
+import { debounce } from '@ember/runloop';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
 
-const TeamDetailsComponent = Ember.Component.extend({
+const TeamDetailsComponent = Component.extend({
 
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   showHide: true,
   editSave: false,
   identification: "",
@@ -19,31 +23,31 @@ const TeamDetailsComponent = Ember.Component.extend({
   tTeamMemberInvited: t("teamMemberInvited"),
   tOrganizationTeamNameUpdated: t("organizationTeamNameUpdated"),
 
-  orgTeam: (function() {
+  orgTeam: computed(function() {
     const orgId = this.get("organization.id");
     const teamId = this.get("team.teamId");
-    return this.get("store").queryRecord('organization-team', {orgId: orgId, teamId: teamId});
-  }).property(),
+    return this.store.queryRecord('organization-team', {orgId: orgId, teamId: teamId});
+  }),
 
-  teamMembers: (function() {
+  teamMembers: computed(function() {
     const orgId = this.get("organization.id");
     const teamId = this.get("team.teamId");
-    return this.get("store").query('team-member', {orgId: orgId, teamId: teamId});
-  }).property(),
+    return this.store.query('team-member', {orgId: orgId, teamId: teamId});
+  }),
 
-  teamProjects: (function() {
+  teamProjects: computed(function() {
     const orgId = this.get("organization.id");
     const teamId = this.get("team.teamId");
-    return this.get("store").query('team-project', {orgId: orgId, teamId: teamId});
-  }).property(),
+    return this.store.query('team-project', {orgId: orgId, teamId: teamId});
+  }),
 
   searchMember() {
-    const searchText = this.get("identification");
+    const searchText = this.identification;
     const searchQuery = `q=${searchText}`;
     const url = [ENV.endpoints.userSearch, searchQuery].join('?');
     this.set("isSearchingMember", true);
     const that = this;
-    this.get("ajax").request(url)
+    this.ajax.request(url)
     .then(function(response) {
       if(!that.isDestroyed) {
         that.set("isSearchingMember", false);
@@ -69,7 +73,7 @@ const TeamDetailsComponent = Ember.Component.extend({
     },
 
     searchQuery() {
-      Ember.run.debounce(this, this.searchMember, 500);
+      debounce(this, this.searchMember, 500);
     },
 
     addMember(userId) {
@@ -78,7 +82,7 @@ const TeamDetailsComponent = Ember.Component.extend({
       const url = [ENV.endpoints.organizations, orgId, ENV.endpoints.teams, teamId, ENV.endpoints.members, userId].join("/");
       const that = this;
       this.set("isAddingMember", true);
-      this.get("ajax").put(url)
+      this.ajax.put(url)
       .then(function(data){
         that.get("notify").success("Team member added");
         if(!that.isDestroyed) {
@@ -95,16 +99,12 @@ const TeamDetailsComponent = Ember.Component.extend({
     },
 
     inviteMember() {
-      const identification = this.get("identification");
+      const identification = this.identification;
       // const tTeamMemberInvited = this.get("tTeamMemberInvited");
-      if(Ember.isEmpty(identification)) {
-        const tEmptyEmailId = this.get("tEmptyEmailId");
-        return this.get("notify").error(tEmptyEmailId);
+      if(isEmpty(identification)) {
+        const tEmptyEmailId = this.tEmptyEmailId;
+        return this.notify.error(tEmptyEmailId);
       }
-      // const data = {
-      //   identification: identification,
-      //   team_id: this.get("team.teamId")
-      // };
       this.set("isInvitingMember", true);
       // this.get("ajax").post(url, {data});
       // .then((data) => {
@@ -129,13 +129,13 @@ const TeamDetailsComponent = Ember.Component.extend({
       const teamId = this.get("orgTeam.id");
       const orgTeamName = this.get("orgTeam.name");
       const orgId = this.get("orgTeam.organization.id");
-      const tOrganizationTeamNameUpdated = this.get("tOrganizationTeamNameUpdated");
+      const tOrganizationTeamNameUpdated = this.tOrganizationTeamNameUpdated;
       const data = {
         name: orgTeamName
       };
       const url = [ENV.endpoints.organizations, orgId, ENV.endpoints.teams, teamId].join("/");
       const that = this;
-      this.get("ajax").put(url, {data})
+      this.ajax.put(url, {data})
       .then(function() {
         that.get("notify").success(tOrganizationTeamNameUpdated);
         that.send("cancelEditing");

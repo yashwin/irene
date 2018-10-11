@@ -1,41 +1,43 @@
 import DS from 'ember-data';
-import Ember from 'ember';
+import { computed } from '@ember/object';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
 
 const Invoice = DS.Model.extend({
-  i18n: Ember.inject.service(),
-  invoiceId: DS.attr('number'),
-  amount: DS.attr('string'),
+
+  i18n: service(),
   paidOn: DS.attr('date'),
-  planName: DS.attr('string'),
-  downloadUrl: DS.attr('string'),
+  amount: DS.attr('string'),
   isPaid: DS.attr('boolean'),
+  planName: DS.attr('string'),
+  invoiceId: DS.attr('number'),
+  downloadUrl: DS.attr('string'),
 
   tPending: t("pending"),
   tPaid: t("paid"),
   tUnpaid: t("unpaid"),
 
-  paidOnHumanized: (function() {
-    const paidOn = this.get("paidOn");
+  paidOnHumanized: computed("paidOn", function() {
+    const paidOn = this.paidOn;
     return paidOn.toLocaleDateString();
-  }).property("paidOn"),
+  }),
 
-  paidDate: (function() {
-    const tPending = this.get("tPending");
-    if (this.get("isPaid")) {
-      return this.get("paidOnHumanized");
+  paidDate: computed("paidOnHumanized", "isPaid", function() {
+    const tPending = this.tPending;
+    if (this.isPaid) {
+      return this.paidOnHumanized;
     }
     return tPending;
-  }).property("paidOnHumanized", "isPaid"),
+  }),
 
-  paidStatus: (function() {
-    const tPaid = this.get("tPaid");
-    const tUnpaid = this.get("tUnpaid");
-    if (this.get("isPaid")) {
+  paidStatus: computed("isPaid", function() {
+    const tPaid = this.tPaid;
+    const tUnpaid = this.tUnpaid;
+    if (this.isPaid) {
       return tPaid;
     }
     return tUnpaid;
-  }).property("isPaid")
+  })
 });
 
 export default Invoice;

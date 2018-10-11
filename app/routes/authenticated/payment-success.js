@@ -1,17 +1,18 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Route from '@ember/routing/route';
 import config from 'irene/config/environment';
 
-const AuthenticatedPaymentSuccessRoute = Ember.Route.extend({
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const AuthenticatedPaymentSuccessRoute = Route.extend({
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   beforeModel(){
     const queryParams = location.href.split('?')[1];
-    this.get("ajax").post(`${config.endpoints.chargebeeCallback}?${queryParams}`)
+    this.ajax.post(`${config.endpoints.chargebeeCallback}?${queryParams}`)
     .then(() => {
-       this.get("notify").success("Payment Successful");
+       this.notify.success("Payment Successful");
      }, () => {
-      this.get("notify").error("PAYMENT FAILED TO UPDATE!!!");
+      this.notify.error("PAYMENT FAILED TO UPDATE!!!");
     });
   }
 });

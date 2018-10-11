@@ -1,36 +1,39 @@
-import Ember from 'ember';
 import ENUMS from 'irene/enums';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
+import { alias, gt, equal, sort } from '@ember/object/computed';
+import $ from 'jquery';
 
-const PricingListComponent = Ember.Component.extend({
+const PricingListComponent = Component.extend({
 
   paymentDuration: ENUMS.PAYMENT_DURATION.MONTHLY,
 
-  subscriptions: (function() {
-    this.get("store").findAll("subscription")
+  subscriptions: computed(function() {
+    this.store.findAll("subscription")
     .then((data) => {
       this.set("subscriptions", data);
       if (data.isLoaded === true) {
-        const plans = this.get("store").findAll("plan");
+        const plans = this.store.findAll("plan");
         this.set("plans", plans);
       }
     });
-  }).property(),
+  }),
 
-  subscription: Ember.computed.alias('subscriptions.firstObject'),
+  subscription: alias('subscriptions.firstObject'),
 
-  subscriptionCount: Ember.computed.alias('subscriptions.length'),
+  subscriptionCount: alias('subscriptions.length'),
 
-  hasSubscription: Ember.computed.gt('subscriptionCount', 0),
+  hasSubscription: gt('subscriptionCount', 0),
 
-  hasNoSubscription: Ember.computed.equal('subscriptionCount', 0),
+  hasNoSubscription: equal('subscriptionCount', 0),
 
-  sortPlanProperties: ['id'],
-  sortedPlans: Ember.computed.sort('plans', 'sortPlanProperties'),
+  sortPlanProperties: ['id'], // eslint-disable-line
+  sortedPlans: sort('plans', 'sortPlanProperties'),
 
-  durations: (function() {
+  durations: computed(function() {
     const durations = ENUMS.PAYMENT_DURATION.CHOICES;
     return durations.slice(0, +(durations.length-2) + 1 || undefined);
-  }).property(),
+  }),
 
   activateDuration(element) {
     // eslint-disable-next-line no-undef
@@ -44,7 +47,7 @@ const PricingListComponent = Ember.Component.extend({
   },
 
   didRender() {
-    const paymentDuration = this.get("paymentDuration");
+    const paymentDuration = this.paymentDuration;
     // eslint-disable-next-line no-undef
     const element = $(this.element).find(`[data-value='${paymentDuration}']`);
     this.activateDuration(element);

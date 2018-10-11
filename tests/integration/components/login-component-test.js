@@ -1,14 +1,12 @@
-import { test, moduleForComponent } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupTest } from 'ember-qunit';
 
-moduleForComponent('login-component', 'Integration | Component | login component', {
-  unit: true,
-  needs: [
-    'service:notification-messages-service'
-  ]
-});
+module('Integration | Component | login component', function(hooks) {
+  setupTest(hooks);
 
-test('tapping button fires an external action', function(assert) {
-  var component = this.subject();
-  component.send("authenticate");
-  assert.equal(component.get("MFAEnabled"), false, 'MFA Enabled');
+  test('tapping button fires an external action', function(assert) {
+    var component = this.owner.factoryFor('component:login-component').create();
+    component.send("authenticate");
+    assert.equal(component.get("MFAEnabled"), false, 'MFA Enabled');
+  });
 });

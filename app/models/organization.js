@@ -1,5 +1,5 @@
+import { computed } from '@ember/object';
 import DS from 'ember-data';
-import Ember from 'ember';
 import { not } from '@ember/object/computed';
 
 const Organization = DS.Model.extend({
@@ -15,7 +15,7 @@ const Organization = DS.Model.extend({
   projectsCount: DS.attr('number'),
   namespacesCount: DS.attr('number'),
   teamsCount: DS.attr('number'),
-  membersCount: Ember.computed('members', function() {
+  membersCount: computed('members', function() {
     return this.get('members.meta.count');
   }),
 });

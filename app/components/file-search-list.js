@@ -1,13 +1,15 @@
-import Ember from 'ember';
+import { once } from '@ember/runloop';
+import { observer, computed } from '@ember/object';
+import Component from '@ember/component';
 import PaginateMixin from 'irene/mixins/paginate';
 
-export default Ember.Component.extend(PaginateMixin, {
+export default Component.extend(PaginateMixin, {
   query: "",
   targetObject: "security/file",
 
-  sortProperties: ["-id"],
+  sortProperties: ["-id"], // eslint-disable-line
 
-  newFileObserver: Ember.observer("realtime.FileCount", function() {
+  newFileObserver: observer("realtime.FileCount", function() {
     return this.incrementProperty("version");
   }),
 
@@ -15,7 +17,7 @@ export default Ember.Component.extend(PaginateMixin, {
     return this.set("offset", 0);
   },
 
-  offsetResetter: Ember.observer("query", function() {
+  offsetResetter: observer("query", function() {
     return (() => {
       const result = [];
       for (let property of ["query"]) {
@@ -25,7 +27,7 @@ export default Ember.Component.extend(PaginateMixin, {
         const propertyChanged = propertyOldValue !== propertyNewValue;
         if (propertyChanged) {
           this.set(propertyOldName, propertyNewValue);
-          result.push(Ember.run.once(this, 'resetOffset'));
+          result.push(once(this, 'resetOffset'));
         } else {
           result.push(undefined);
         }
@@ -34,9 +36,9 @@ export default Ember.Component.extend(PaginateMixin, {
     })();
   }),
 
-  extraQueryStrings: Ember.computed("query", function() {
+  extraQueryStrings: computed("query", function() {
     const query = {
-      query: this.get("query"),
+      query: this.query,
       projectId: this.get("project.projectId")
     };
     return JSON.stringify(query, Object.keys(query).sort());

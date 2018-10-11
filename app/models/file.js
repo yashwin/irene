@@ -1,9 +1,10 @@
-// jshint ignore: start
 import DS from 'ember-data';
-import BaseModelMixin from 'irene/mixins/base-model';
 import ENUMS from 'irene/enums';
-import Ember from 'ember';
+import { computed } from '@ember/object';
 import { translationMacro as t } from 'ember-i18n';
+import { not, sort } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
+import BaseModelMixin from 'irene/mixins/base-model';
 
 const _getComputedColor = function(selector) {
   const el = document.querySelector(`#hiddencolorholder .is-${selector}`);
@@ -16,7 +17,7 @@ const _getAnalysesCount = (analysis, risk)=> {
 };
 
 const File = DS.Model.extend(BaseModelMixin, {
-  i18n: Ember.inject.service(),
+  i18n: service(),
   project: DS.belongsTo('OrganizationProject', {inverse:'files'}),
   profile: DS.belongsTo('profile', {inverse:'files'}),
   uuid: DS.attr('string'),
@@ -38,20 +39,20 @@ const File = DS.Model.extend(BaseModelMixin, {
   isManualDone: DS.attr('boolean'),
   isApiDone: DS.attr('boolean'),
 
-  ifManualNotRequested: (function() {
-    const manual = this.get('manual');
+  ifManualNotRequested: computed("manual", function() {
+    const manual = this.manual;
     return !manual;
-  }).property('manual'),
+  }),
 
-  isRunningApiScan: (function() {
-    const apiScanProgress = this.get("apiScanProgress");
+  isRunningApiScan: computed("apiScanProgress", function() {
+    const apiScanProgress = this.apiScanProgress;
     if ([0,100].includes(apiScanProgress)) {
       return false;
     }
     return true;
-  }).property("apiScanProgress"),
+  }),
 
-  isApiNotDone: Ember.computed.not('isApiDone'),
+  isApiNotDone: not('isApiDone'),
 
   scanProgressClass(type){
     if (type === true) {
@@ -60,10 +61,10 @@ const File = DS.Model.extend(BaseModelMixin, {
     return false;
   },
 
-  isStaticCompleted: (function() {
-    const isStaticDone = this.get("isStaticDone");
+  isStaticCompleted: computed("isStaticDone", function() {
+    const isStaticDone = this.isStaticDone;
     return this.scanProgressClass(isStaticDone);
-  }).property("isStaticDone"),
+  }),
 
   tDeviceBooting: t("deviceBooting"),
   tDeviceDownloading: t("deviceDownloading"),
@@ -72,8 +73,8 @@ const File = DS.Model.extend(BaseModelMixin, {
   tDeviceHooking: t("deviceHooking"),
   tDeviceShuttingDown: t("deviceShuttingDown"),
 
-  analysesSorting: ['computedRisk:desc'],
-  sortedAnalyses: Ember.computed.sort('analyses', 'analysesSorting'),
+  analysesSorting: ['computedRisk:desc'], // eslint-disable-line
+  sortedAnalyses: sort('analyses', 'analysesSorting'),
 
   countRiskCritical: 0,
   countRiskHigh: 0,
@@ -82,8 +83,8 @@ const File = DS.Model.extend(BaseModelMixin, {
   countRiskNone: 0,
   countRiskUnknown: 0,
 
-  doughnutData: Ember.computed('analyses.@each.computedRisk', function() {
-    const analyses = this.get("analyses");
+  doughnutData: computed('analyses.@each.computedRisk', function() {
+    const analyses = this.analyses;
     const r = ENUMS.RISK;
     const countRiskCritical = _getAnalysesCount(analyses, r.CRITICAL);
     const countRiskHigh = _getAnalysesCount(analyses, r.HIGH);
@@ -92,12 +93,16 @@ const File = DS.Model.extend(BaseModelMixin, {
     const countRiskNone = _getAnalysesCount(analyses, r.NONE);
     const countRiskUnknown = _getAnalysesCount(analyses, r.UNKNOWN);
 
+     /* eslint-disable */
+
     this.set("countRiskCritical", countRiskCritical);
     this.set("countRiskHigh", countRiskHigh);
     this.set("countRiskMedium", countRiskMedium);
     this.set("countRiskLow", countRiskLow);
     this.set("countRiskNone", countRiskNone);
     this.set("countRiskUnknown", countRiskUnknown);
+
+    /* eslint-enable */
 
     return {
       labels: [
@@ -130,39 +135,39 @@ const File = DS.Model.extend(BaseModelMixin, {
     };
   }),
 
-  isNoneStatus: (function() {
-    const status = this.get('dynamicStatus');
+  isNoneStatus: computed("dynamicStatus", function() {
+    const status = this.dynamicStatus;
     return status === ENUMS.DYNAMIC_STATUS.NONE;
-  }).property('dynamicStatus'),
+  }),
 
-  isNotNoneStatus: Ember.computed.not('isNoneStatus'),
+  isNotNoneStatus: not('isNoneStatus'),
 
-  isReady: (function() {
-    const status = this.get('dynamicStatus');
+  isReady: computed("dynamicStatus", function() {
+    const status = this.dynamicStatus;
     return status === ENUMS.DYNAMIC_STATUS.READY;
-  }).property('dynamicStatus'),
+  }),
 
-  isNotReady: Ember.computed.not('isReady'),
+  isNotReady: not('isReady'),
 
-  isNeitherNoneNorReady: (function() {
-    const status = this.get('dynamicStatus');
+  isNeitherNoneNorReady: computed("dynamicStatus", function() {
+    const status = this.dynamicStatus;
     return ![ENUMS.DYNAMIC_STATUS.READY, ENUMS.DYNAMIC_STATUS.NONE].includes(status);
-  }).property('dynamicStatus'),
+  }),
 
-  startingScanStatus: (function() {
-    const status = this.get('dynamicStatus');
+  startingScanStatus: computed("dynamicStatus", function() {
+    const status = this.dynamicStatus;
     return ![ENUMS.DYNAMIC_STATUS.READY, ENUMS.DYNAMIC_STATUS.NONE, ENUMS.DYNAMIC_STATUS.SHUTTING_DOWN].includes(status);
-  }).property('dynamicStatus'),
+  }),
 
-  statusText: (function() {
-    const tDeviceBooting = this.get("tDeviceBooting");
-    const tDeviceDownloading = this.get("tDeviceDownloading");
-    const tDeviceInstalling = this.get("tDeviceInstalling");
-    const tDeviceLaunching = this.get("tDeviceLaunching");
-    const tDeviceHooking = this.get("tDeviceHooking");
-    const tDeviceShuttingDown = this.get("tDeviceShuttingDown");
+  statusText: computed("dynamicStatus", function() {
+    const tDeviceBooting = this.tDeviceBooting;
+    const tDeviceDownloading = this.tDeviceDownloading;
+    const tDeviceInstalling = this.tDeviceInstalling;
+    const tDeviceLaunching = this.tDeviceLaunching;
+    const tDeviceHooking = this.tDeviceHooking;
+    const tDeviceShuttingDown = this.tDeviceShuttingDown;
 
-    switch (this.get("dynamicStatus")) {
+    switch (this.dynamicStatus) {
       case ENUMS.DYNAMIC_STATUS.BOOTING:
         return tDeviceBooting;
       case ENUMS.DYNAMIC_STATUS.DOWNLOADING:
@@ -178,7 +183,7 @@ const File = DS.Model.extend(BaseModelMixin, {
       default:
         return "Unknown Status";
     }
-  }).property('dynamicStatus'),
+  }),
 
   setDynamicStatus(status) {
     this.store.push({
@@ -209,6 +214,5 @@ const File = DS.Model.extend(BaseModelMixin, {
   }
 }
 );
-
 
 export default File;

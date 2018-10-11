@@ -1,17 +1,18 @@
-import Ember from 'ember';
+import { computed } from '@ember/object';
+import Component from '@ember/component';
 
-export default Ember.Component.extend({
+export default Component.extend({
   isGeneralSettings: true,
   isAnalysisSettings: false,
 
-  generalSettingsClass: Ember.computed('isGeneralSettings', function() {
-    if (this.get('isGeneralSettings')) {
+  generalSettingsClass: computed('isGeneralSettings', function() {
+    if (this.isGeneralSettings) {
       return 'is-active';
     }
   }),
 
-  analysisSettingsClass: Ember.computed('isAnalysisSettings', function() {
-    if (this.get('isAnalysisSettings')) {
+  analysisSettingsClass: computed('isAnalysisSettings', function() {
+    if (this.isAnalysisSettings) {
       return 'is-active';
     }
   }),

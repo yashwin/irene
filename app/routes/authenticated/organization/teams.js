@@ -1,9 +1,10 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Route from '@ember/routing/route';
 import config from 'irene/config/environment';
 import ScrollTopMixin from 'irene/mixins/scroll-top';
 
-export default Ember.Route.extend(ScrollTopMixin, {
-  me: Ember.inject.service(),
+export default Route.extend(ScrollTopMixin, {
+  me: service(),
 
   title: `Teams${config.platform}`,
 });

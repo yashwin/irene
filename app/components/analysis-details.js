@@ -1,9 +1,11 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import ENUMS from 'irene/enums';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 
-const AnalysisDetailsComponent = Ember.Component.extend({
+const AnalysisDetailsComponent = Component.extend({
   analysis: null,
   tagName: "article",
   mpClassSelector: true,
@@ -11,31 +13,31 @@ const AnalysisDetailsComponent = Ember.Component.extend({
   showVulnerability: false,
   classNameBindings: ["riskClass"],
 
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   tSuccessfullyOverridden: t("successfullyOverridden"),
   tSuccessfullyReset: t("successfullyReset"),
 
-  risks: (function() {
+  risks: computed(function() {
     const risks = ENUMS.RISK.CHOICES;
     const riskFilter = [ENUMS.RISK.NONE, ENUMS.RISK.UNKNOWN];
     return risks.filter(risk => !riskFilter.includes(risk.value));
-  }).property(),
+  }),
 
-  filteredRisks: (function() {
-    const risks = this.get("risks");
+  filteredRisks: computed("risks", "analysis.risk", function() {
+    const risks = this.risks;
     const analysisRisk = this.get("analysis.risk");
     return risks.filter(risk => analysisRisk !== risk.value);
-  }).property("risks", "analysis.risk"),
+  }),
 
-  markedRisk: (function() {
-    const filteredRisks = this.get("filteredRisks");
+  markedRisk: computed("filteredRisks", function() {
+    const filteredRisks = this.filteredRisks;
     return filteredRisks[0].value;
-  }).property("filteredRisks"),
+  }),
 
-  riskClass: ( function() {
+  riskClass: computed("analysis.computedRisk", function() {
     const risk = this.get("analysis.computedRisk");
     switch (risk) {
       case ENUMS.RISK.NONE:
@@ -49,15 +51,15 @@ const AnalysisDetailsComponent = Ember.Component.extend({
       case ENUMS.RISK.CRITICAL:
         return "is-critical";
     }
-  }).property("analysis.computedRisk"),
+  }),
 
-  progressClass: ( function() {
+  progressClass: computed("analysis.computedRisk", function() {
     const risk = this.get("analysis.computedRisk");
     switch (risk) {
       case ENUMS.RISK.UNKNOWN:
         return "is-progress";
     }
-  }).property("analysis.computedRisk"),
+  }),
 
   editAnalysisURL(type) {
     const fileId = this.get("analysis.file.id");
@@ -70,7 +72,7 @@ const AnalysisDetailsComponent = Ember.Component.extend({
     this.send("resetMarkedAnalysis");
   },
 
-  tags: (function() {
+  tags: computed("analysis.{vulnerability.types, file.{isStaticDone,isDynamicDone,isManualDone, isApiDone}}", function() {
     const types = this.get("analysis.vulnerability.types");
     if (types === undefined) { return []; }
     const tags = [];
@@ -101,19 +103,13 @@ const AnalysisDetailsComponent = Ember.Component.extend({
       }
     }
     return tags;
-  }).property(
-    "analysis.vulnerability.types",
-    "analysis.file.isStaticDone",
-    "analysis.file.isDynamicDone",
-    "analysis.file.isManualDone",
-    "analysis.file.isApiDone"
-  ),
+  }),
 
   actions: {
 
     toggleVulnerability() {
-      this.set("mpClassSelector", this.get("showVulnerability"));
-      this.set("showVulnerability", !this.get("showVulnerability"));
+      this.set("mpClassSelector", this.showVulnerability);
+      this.set("showVulnerability", !this.showVulnerability);
     },
 
     openEditAnalysisModal() {
@@ -135,19 +131,19 @@ const AnalysisDetailsComponent = Ember.Component.extend({
     },
 
     markAnalysis() {
-      const markedRisk = this.get("markedRisk");
-      const markAllAnalyses = this.get("markAllAnalyses");
+      const markedRisk = this.markedRisk;
+      const markAllAnalyses = this.markAllAnalyses;
       const url = this.editAnalysisURL("risk");
       const data = {
         risk: markedRisk,
         all: markAllAnalyses
       };
       this.set("isMarkingAnalysis", true);
-      this.get("ajax").put(url, {
+      this.ajax.put(url, {
         data
       }).then(() => {
         if(!this.isDestroyed) {
-          this.get("notify").success(this.get("tSuccessfullyOverridden"));
+          this.notify.success(this.tSuccessfullyOverridden);
           this.set("isMarkingAnalysis", false);
           this.set("isEditingOverriddenRisk", false);
           this.set("analysis.overriddenRisk", markedRisk);
@@ -155,7 +151,7 @@ const AnalysisDetailsComponent = Ember.Component.extend({
           this.set("analysis.isOverriddenRisk", true);
         }
       }, (error) => {
-        this.get("notify").error(error.payload.message);
+        this.notify.error(error.payload.message);
         this.set("isMarkingAnalysis", false);
       });
     },
@@ -174,18 +170,18 @@ const AnalysisDetailsComponent = Ember.Component.extend({
         all: true
       };
       this.set("isResettingMarkedAnalysis", true);
-      this.get("ajax").delete(url, {
+      this.ajax.delete(url, {
         data
       }).then(() => {
         if(!this.isDestroyed) {
-          this.get("notify").success(this.get("tSuccessfullyReset"));
+          this.notify.success(this.tSuccessfullyReset);
           this.set("isResettingMarkedAnalysis", false);
           this.set("showResetAnalysisConfirmBox", false);
           this.set("analysis.isOverriddenRisk", false);
           this.set("analysis.computedRisk", this.get("analysis.risk"));
         }
       }, (error) => {
-        this.get("notify").error(error.payload.message);
+        this.notify.error(error.payload.message);
         this.set("isResettingMarkedAnalysis", false);
       });
     },

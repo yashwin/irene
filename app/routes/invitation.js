@@ -1,7 +1,7 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
 import config from 'irene/config/environment';
 
-const InvitationRoute = Ember.Route.extend({
+const InvitationRoute = Route.extend({
 
   title: `Invitation${config.platform}`,
 

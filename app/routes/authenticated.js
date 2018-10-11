@@ -1,5 +1,8 @@
 // jshint ignore: start
-import Ember from 'ember';
+import { isEmpty } from '@ember/utils';
+
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 import ENUMS from 'irene/enums';
 import { CSBMap } from 'irene/router';
 import ENV from 'irene/config/environment';
@@ -9,9 +12,7 @@ import AuthenticatedRouteMixin from 'ember-simple-auth/mixins/authenticated-rout
 
 const { location } = window;
 
-const {inject: {service}} = Ember;
-
-const AuthenticatedRoute = Ember.Route.extend(AuthenticatedRouteMixin, {
+const AuthenticatedRoute = Route.extend(AuthenticatedRouteMixin, {
 
   lastTransition: null,
   i18n: service(),
@@ -30,8 +31,8 @@ const AuthenticatedRoute = Ember.Route.extend(AuthenticatedRouteMixin, {
 
   async model() {
     const userId = this.get("session.data.authenticated.user_id");
-    await this.get('org').load();
-    return this.get('store').find('user', userId);
+    await this.org.load();
+    return this.store.find('user', userId);
   },
 
   afterModel(user){
@@ -56,7 +57,7 @@ const AuthenticatedRoute = Ember.Route.extend(AuthenticatedRouteMixin, {
       window.Intercom('trackEvent', 'logged-in');
     } catch (e) {error = e;}
     try {
-      const mixpanel = this.get("mixpanel");
+      const mixpanel = this.mixpanel;
       mixpanel.identify(user.get("id"));
       mixpanel.peopleSet({
         "$name": user.get("username"),
@@ -91,21 +92,21 @@ const AuthenticatedRoute = Ember.Route.extend(AuthenticatedRouteMixin, {
     // eslint-disable-next-line no-console
     console.log(error);
 
-    const trial = this.get("trial");
+    const trial = this.trial;
     trial.set("isTrial", user.get("isTrial"));
 
-    this.get('notify').setDefaultAutoClear(ENV.notifications.autoClear);
+    this.notify.setDefaultAutoClear(ENV.notifications.autoClear);
 
     const socketId = user != null ? user.get("socketId") : undefined;
-    if (Ember.isEmpty(socketId)) {
+    if (isEmpty(socketId)) {
       return;
     }
     this.set('i18n.locale', user.get("lang"));
-    this.get('moment').changeLocale(user.get("lang"));
+    this.moment.changeLocale(user.get("lang"));
 
     const that = this;
-    const store = this.get("store");
-    const realtime = this.get("realtime");
+    const store = this.store;
+    const realtime = this.realtime;
 
     const allEvents = {
 
@@ -145,7 +146,7 @@ const AuthenticatedRoute = Ember.Route.extend(AuthenticatedRouteMixin, {
       }
     };
 
-    const socket = this.get('socketIOService').socketFor(ENV.socketPath);
+    const socket = this.socketIOService.socketFor(ENV.socketPath);
 
     socket.emit("subscribe", {room: socketId});
     return (() => {
@@ -163,14 +164,14 @@ const AuthenticatedRoute = Ember.Route.extend(AuthenticatedRouteMixin, {
     willTransition(transition) {
       const currentRoute = transition.targetName;
       const csbDict = CSBMap[currentRoute];
-      if (!Ember.isEmpty(csbDict)) {
+      if (!isEmpty(csbDict)) {
         triggerAnalytics('feature', csbDict);
       }
     },
 
     invalidateSession() {
       triggerAnalytics('logout');
-      this.get('session').invalidate();
+      this.session.invalidate();
     }
   }
 }

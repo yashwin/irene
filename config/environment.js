@@ -1,5 +1,3 @@
-/* jshint node: true */
-
 var url = require('url');
 
 module.exports = function(environment) {

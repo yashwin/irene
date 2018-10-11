@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import ENUMS from 'irene/enums';
 import Resolver from 'irene/resolver';
+import Application from '@ember/application';
 import config from 'irene/config/environment';
 import installPendo from 'irene/utils/install-pendo';
 import loadInitializers from 'ember-load-initializers';
@@ -26,7 +27,7 @@ customerSuccessBox();
 
 Ember.MODEL_FACTORY_INJECTIONS = true;
 
-const App = Ember.Application.extend({
+const App = Application.extend({
   modulePrefix: config.modulePrefix,
   podModulePrefix: config.podModulePrefix,
   Resolver

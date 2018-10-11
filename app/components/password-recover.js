@@ -1,13 +1,14 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 
 
-const PasswordRecoverComponent = Ember.Component.extend({
+const PasswordRecoverComponent = Component.extend({
 
   identification: "",
 
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   mailSent: false,
   isSendingRecoveryEmail: false,
@@ -15,24 +16,24 @@ const PasswordRecoverComponent = Ember.Component.extend({
   actions: {
 
     recover() {
-      const identification = this.get('identification').trim();
+      const identification = this.identification.trim();
       if (!identification) {
-        return this.get("notify").error("Please enter your Username/Email", ENV.notifications);
+        return this.notify.error("Please enter your Username/Email", ENV.notifications);
       }
       const data =
         {identification};
       this.set("isSendingRecoveryEmail", true);
-      this.get("ajax").post(ENV.endpoints.recover, {data})
+      this.ajax.post(ENV.endpoints.recover, {data})
       .then((data) => {  
         if(!this.isDestroyed) {
-         this.get("notify").success(data.message);
+         this.notify.success(data.message);
          this.set("mailSent", true);
          this.set("isSendingRecoveryEmail", false);
         }
       }, (error) => {
         if(!this.isDestroyed) {
           this.set("isSendingRecoveryEmail", false);
-          this.get("notify").error(error.payload.message);
+          this.notify.error(error.payload.message);
         }
       });
     }

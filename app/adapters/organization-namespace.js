@@ -1,8 +1,7 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
 import DRFAdapter from './drf';
 import ENV from 'irene/config/environment';
 import DataAdapterMixin from 'ember-simple-auth/mixins/data-adapter-mixin';
-const {inject: {service}} = Ember;
 
 export default DRFAdapter.extend(DataAdapterMixin, {
   host: ENV.host,
@@ -11,7 +10,7 @@ export default DRFAdapter.extend(DataAdapterMixin, {
   authorizer: 'authorizer:irene',
   organization: service('organization'),
   _buildURL: function(modelName, id) {
-    const baseurl = `${this.get('host')}/${this.get('namespace')}/organizations/${this.get('organization').selected.id}/namespaces`;
+    const baseurl = `${this.host}/${this.namespace}/organizations/${this.organization.selected.id}/namespaces`;
     if (id) {
       return `${baseurl}/${encodeURIComponent(id)}`;
     }

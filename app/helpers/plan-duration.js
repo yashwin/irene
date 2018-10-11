@@ -1,4 +1,4 @@
-import Ember from 'ember';
+import { helper as buildHelper } from '@ember/component/helper';
 import ENUMS from 'irene/enums';
 
 // This function receives the params `params, hash`
@@ -16,7 +16,7 @@ const planDuration = function(params) {
   }
 };
 
-const PlanDurationHelper = Ember.Helper.helper(planDuration);
+const PlanDurationHelper = buildHelper(planDuration);
 
 export { planDuration };
 

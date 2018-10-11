@@ -1,24 +1,25 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 
-const AnalysisSettingsComponent = Ember.Component.extend({
+const AnalysisSettingsComponent = Component.extend({
 
   project: null,
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   isSavingStatus: false,
   tSavedPreferences: t("savedPreferences"),
 
   unknownAnalysisStatus: (function() {
-    return this.get("store").queryRecord('unknown-analysis-status', {id: this.get("project.activeProfileId")});
-  }).property(),
+    return this.store.queryRecord('unknown-analysis-status', {id: this.get("project.activeProfileId")});
+  }),
 
   actions: {
 
     showUnknownAnalysis() {
-      const tSavedPreferences = this.get("tSavedPreferences");
+      const tSavedPreferences = this.tSavedPreferences;
       const isChecked = this.$('#show-unkown-analysis')[0].checked;
       const profileId = this.get("project.activeProfileId");
       const url = [ENV.endpoints.profiles, profileId, ENV.endpoints.unknownAnalysisStatus].join('/');
@@ -26,16 +27,16 @@ const AnalysisSettingsComponent = Ember.Component.extend({
         status: isChecked
       };
       this.set("isSavingStatus", true);
-      this.get("ajax").put(url, {data})
+      this.ajax.put(url, {data})
       .then(() => {
-        this.get("notify").success(tSavedPreferences);
+        this.notify.success(tSavedPreferences);
         if(!this.isDestroyed) {
           this.set("isSavingStatus", false);
           this.set("unknownAnalysisStatus.status", isChecked);
         }
       }, (error) => {
         this.set("isSavingStatus", false);
-        this.get("notify").error(error.payload.message);
+        this.notify.error(error.payload.message);
       });
 
     }

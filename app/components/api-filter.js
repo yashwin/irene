@@ -1,4 +1,7 @@
-import Ember from 'ember';
+import { isEmpty } from '@ember/utils';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
@@ -8,10 +11,10 @@ const isRegexFailed = function(url) {
   return reg.test(url);
 };
 
-const ApiFilterComponent = Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const ApiFilterComponent = Component.extend({
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   newUrlFilter: null,
   deletedURL: "",
@@ -22,13 +25,13 @@ const ApiFilterComponent = Ember.Component.extend({
   isSavingFilter: false,
   isDeletingURLFilter: false,
 
-  apiScanOptions: (function() {
-    return this.get("store").queryRecord('api-scan-options', {id: this.get("profileId")});
-  }).property(),
+  apiScanOptions: computed(function() {
+    return this.store.queryRecord('api-scan-options', {id: this.profileId});
+  }),
 
   confirmCallback() {
     const apiUrlFilters = this.get("apiScanOptions.apiUrlFilters");
-    const deletedURL = this.get("deletedURL");
+    const deletedURL = this.deletedURL;
     const splittedURLs = apiUrlFilters.split(",");
     const index = splittedURLs.indexOf(deletedURL);
     splittedURLs.splice(index,1);
@@ -42,19 +45,19 @@ const ApiFilterComponent = Ember.Component.extend({
 
     addApiUrlFilter() {
       let combinedURLS;
-      const tInvalidURL = this.get("tInvalidURL");
-      const tEmptyURL = this.get("tEmptyURL");
+      const tInvalidURL = this.tInvalidURL;
+      const tEmptyURL = this.tEmptyURL;
       const apiUrlFilters = this.get("apiScanOptions.apiUrlFilters");
-      const newUrlFilter = this.get("newUrlFilter");
-      if (Ember.isEmpty(newUrlFilter)) {
-        return this.get("notify").error(tEmptyURL);
+      const newUrlFilter = this.newUrlFilter;
+      if (isEmpty(newUrlFilter)) {
+        return this.notify.error(tEmptyURL);
       }
       else {
         if (!isRegexFailed(newUrlFilter)) {
-          return this.get("notify").error(`${newUrlFilter} ${tInvalidURL}`);
+          return this.notify.error(`${newUrlFilter} ${tInvalidURL}`);
         }
       }
-      if (!Ember.isEmpty(apiUrlFilters)) {
+      if (!isEmpty(apiUrlFilters)) {
         combinedURLS = apiUrlFilters.concat("," , newUrlFilter);
       }
       else {
@@ -65,18 +68,18 @@ const ApiFilterComponent = Ember.Component.extend({
     },
 
     saveApiUrlFilter() {
-      const tUrlUpdated = this.get("tUrlUpdated");
-      const updatedURLFilters = this.get("updatedURLFilters");
-      const profileId = this.get("profileId");
+      const tUrlUpdated = this.tUrlUpdated;
+      const updatedURLFilters = this.updatedURLFilters;
+      const profileId = this.profileId;
       const url = [ENV.endpoints.profiles, profileId, ENV.endpoints.apiScanOptions].join('/');
       const data = {
         api_url_filters: updatedURLFilters
       };
       triggerAnalytics('feature', ENV.csb.addAPIEndpoints);
       this.set("isSavingFilter", true);
-      this.get("ajax").put(url, {data})
+      this.ajax.put(url, {data})
       .then(() => {
-        this.get("notify").success(tUrlUpdated);
+        this.notify.success(tUrlUpdated);
         if(!this.isDestroyed) {
           this.send("closeRemoveURLConfirmBox");
           this.set("apiScanOptions.apiUrlFilters", updatedURLFilters);
@@ -88,7 +91,7 @@ const ApiFilterComponent = Ember.Component.extend({
         if(!this.isDestroyed) {
           this.set("isSavingFilter", false);
           this.set("isDeletingURLFilter", false);
-          this.get("notify").error(error.payload.message);
+          this.notify.error(error.payload.message);
         }
       });
     },

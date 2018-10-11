@@ -1,14 +1,15 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Route from '@ember/routing/route';
 import ENV from 'irene/config/environment';
 
-const InviteRoute = Ember.Route.extend({
+const InviteRoute = Route.extend({
   title: `Invitation`,
-  ajax: Ember.inject.service(),
+  ajax: service(),
 
   async model(params){
     const token = params.token;
     const url = [ENV.endpoints.invite, token].join('/')
-    const ret = await this.get("ajax").request(url)
+    const ret = await this.ajax.request(url)
     return ret;
   }
 });

@@ -1,6 +1,6 @@
-import Ember from 'ember';
+import Component from '@ember/component';
 
-const PromptBoxComponent = Ember.Component.extend({
+const PromptBoxComponent = Component.extend({
 
   isActive: false,
   classNames: ["modal"],
@@ -16,13 +16,13 @@ const PromptBoxComponent = Ember.Component.extend({
 
     clearModal() {
       this.set("isActive", false);
-      this.get("cancelAction")();
+      this.cancelAction();
     },
 
     sendCallback() {
-      const inputValue = this.get("inputValue");
-      const delegate = this.get("delegate");
-      this.get("confirmAction")(inputValue);
+      const inputValue = this.inputValue;
+      const delegate = this.delegate;
+      this.confirmAction(inputValue);
       if (delegate && delegate.promptCallback) {
         delegate.promptCallback(inputValue);
       }

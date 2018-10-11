@@ -1,22 +1,24 @@
-import Ember from 'ember';
+import $ from 'jquery';
+import { isEmpty } from '@ember/utils';
 import Uploader from 'irene/utils/uploader';
 import EmberUploader from 'ember-uploader';
 import { translationMacro as t } from 'ember-i18n';
+import { inject as service } from '@ember/service';
 
 const UploadAppComponent = EmberUploader.FileField.extend({
-  store: Ember.inject.service('store'),
+  store: service('store'),
   delegate: null,
-  i18n: Ember.inject.service("i18n"),
+  i18n: service("i18n"),
 
   tErrorWhileFetching: t("errorWhileFetching"),
   tErrorWhileUploading: t("errorWhileUploading"),
   tFileUploadedSuccessfully: t("fileUploadedSuccessfully"),
-  notify: Ember.inject.service("notification-messages"),
+  notify: service("notification-messages"),
 
   classNames: ["file-input"],
   async filesDidChange(files) {
-    const delegate = this.get("delegate");
-    if (Ember.isEmpty(files)) {
+    const delegate = this.delegate;
+    if (isEmpty(files)) {
       return;
     }
     delegate.set("isUploading", true);
@@ -24,14 +26,14 @@ const UploadAppComponent = EmberUploader.FileField.extend({
     const uploader = Uploader.create({container: this.container});
     uploader.on('progress', e => delegate.set("progress", parseInt(e.percent)));
     try {
-      const uploadItem = await this.get("store").queryRecord('uploadApp', {});
+      const uploadItem = await this.store.queryRecord('uploadApp', {});
       await uploader.uploadFile(files[0], uploadItem.get('url'));
       await uploadItem.save()
-      this.get("notify").success(this.get('tFileUploadedSuccessfully'));
+      this.notify.success(this.tFileUploadedSuccessfully);
     } catch(e) {
       // eslint-disable-next-line no-console
       console.log(e);
-      this.get("notify").error(this.get('tErrorWhileUploading'));
+      this.notify.error(this.tErrorWhileUploading);
     }
     // eslint-disable-next-line no-undef
     $('input[type=file]').val('');

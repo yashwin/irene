@@ -1,4 +1,6 @@
-import Ember from 'ember';
+import { isEmpty } from '@ember/utils';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import PaginateMixin from 'irene/mixins/paginate';
 import { translationMacro as t } from 'ember-i18n';
 import { task } from 'ember-concurrency';
@@ -6,9 +8,9 @@ import ENV from 'irene/config/environment';
 import { on } from '@ember/object/evented';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-export default Ember.Component.extend(PaginateMixin, {
-  i18n: Ember.inject.service(),
-  realtime: Ember.inject.service(),
+export default Component.extend(PaginateMixin, {
+  i18n: service(),
+  realtime: service(),
 
   email: '',
   isInvitingMember: false,
@@ -27,27 +29,27 @@ export default Ember.Component.extend(PaginateMixin, {
 
   /* Send invitation */
   inviteMember: task(function * () {
-    const email = this.get("email");
-    if(Ember.isEmpty(email)) {
-      throw new Error(this.get('tEmptyEmailId'));
+    const email = this.email;
+    if(isEmpty(email)) {
+      throw new Error(this.tEmptyEmailId);
     }
 
     this.set('isInvitingMember', true);
 
-    const t = this.get('team');
+    const t = this.team;
     if (t) {
       yield t.createInvitation({email});
     } else {
-      const orgInvite = yield this.get('store').createRecord('organization-invitation', {email});
+      const orgInvite = yield this.store.createRecord('organization-invitation', {email});
       yield orgInvite.save();
     }
 
     // signal to update invitation list
-    this.get('realtime').incrementProperty('InvitationCounter');
+    this.realtime.incrementProperty('InvitationCounter');
   }).evented(),
 
   inviteMemberSucceeded: on('inviteMember:succeeded', function() {
-    this.get('notify').success(this.get("tOrgMemberInvited"));
+    this.notify.success(this.tOrgMemberInvited);
     this.set("email", '');
     this.set('showInviteMemberModal', false);
     this.set('isInvitingMember', false);
@@ -55,13 +57,13 @@ export default Ember.Component.extend(PaginateMixin, {
   }),
 
   inviteMemberErrored: on('inviteMember:errored', function(_, err) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (err.errors && err.errors.length) {
       errMsg = err.errors[0].detail || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
     this.set('isInvitingMember', false);
   })
 

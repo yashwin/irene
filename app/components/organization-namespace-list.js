@@ -1,15 +1,15 @@
-import Ember from 'ember';
+import { gt } from '@ember/object/computed';
+import Component from '@ember/component';
+import { inject as service } from '@ember/service';
 import PaginateMixin from 'irene/mixins/paginate';
 
-const {inject: {service}} = Ember;
-
-export default Ember.Component.extend(PaginateMixin, {
+export default Component.extend(PaginateMixin, {
   i18n: service(),
   org: service('organization'),
 
   classNames: ['column'],
   targetObject: 'organization-namespace',
-  sortProperties: ['created:desc'],
+  sortProperties: ['created:desc'], // eslint-disable-line
 
-  hasNamespace: Ember.computed.gt('org.selected.namespacesCount', 0)
+  hasNamespace: gt('org.selected.namespacesCount', 0)
 });

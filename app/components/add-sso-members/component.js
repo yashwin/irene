@@ -1,14 +1,15 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import PaginateMixin from 'irene/mixins/paginate';
 import { translationMacro as t } from 'ember-i18n';
 import { task } from 'ember-concurrency';
 import { on } from '@ember/object/evented';
 import parseEmails from 'irene/utils/parse-emails';
 
-export default Ember.Component.extend(PaginateMixin, {
-  i18n: Ember.inject.service(),
-  realtime: Ember.inject.service(),
-  organization: Ember.inject.service(),
+export default Component.extend(PaginateMixin, {
+  i18n: service(),
+  realtime: service(),
+  organization: service(),
 
   emailsFromText: '',
   emailsFromFile: '',
@@ -30,24 +31,24 @@ export default Ember.Component.extend(PaginateMixin, {
   addSSOMembers: task(function * () {
     this.set('isAddingSSOMember', true);
 
-    const emails = parseEmails(this.get('emailsFromText') + this.get('emailsFromFile'));
+    const emails = parseEmails(this.emailsFromText + this.emailsFromFile);
 
     if(!emails.length) {
-      throw new Error(this.get('tEmptyEmailId'));
+      throw new Error(this.tEmptyEmailId);
     }
 
-    const url = `organizations/${this.get('organization').selected.id}/ssomembers`;
+    const url = `organizations/${this.organization.selected.id}/ssomembers`;
     const data = {
       emails
     };
-    yield this.get('ajax').post(url, {data, contentType: 'application/json'});
+    yield this.ajax.post(url, {data, contentType: 'application/json'});
 
     // signal to update members list
-    this.get('realtime').incrementProperty('OrganizationMemberCounter');
+    this.realtime.incrementProperty('OrganizationMemberCounter');
   }).evented(),
 
   addSSOMembersSucceeded: on('addSSOMembers:succeeded', function() {
-    this.get('notify').success(this.get('tAddedSSOMembersToOrg'));
+    this.notify.success(this.tAddedSSOMembersToOrg);
 
     this.set('emailsFromText', '');
     this.set('emailsFromFile', '');
@@ -56,13 +57,13 @@ export default Ember.Component.extend(PaginateMixin, {
   }),
 
   addSSOMembersErrored: on('addSSOMembers:errored', function(_, err) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (err.payload && err.payload.emails && err.payload.emails.hasOwnProperty(0) && err.payload.emails[0].length) {
       errMsg = err.payload.emails[0][0] || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
-    this.get('notify').error(errMsg);
+    this.notify.error(errMsg);
 
     this.set('isAddingSSOMember', false);
   }),

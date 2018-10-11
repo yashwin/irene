@@ -1,12 +1,13 @@
-import Ember from 'ember';
+import { getOwner } from '@ember/application';
+import { computed } from '@ember/object';
+import Component from '@ember/component';
+import { inject as service } from '@ember/service';
 import { task } from 'ember-concurrency';
 import { on } from '@ember/object/evented';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-const {inject: {service}} = Ember;
-
-export default Ember.Component.extend({
+export default Component.extend({
   me: service(),
   i18n: service(),
   ajax: service(),
@@ -21,7 +22,7 @@ export default Ember.Component.extend({
   tOrganizationNameUpdated: t("organizationNameUpdated"),
 
   securityEnabled() {
-    this.get("ajax").request("projects", {namespace: 'api/hudson-api'})
+    this.ajax.request("projects", {namespace: 'api/hudson-api'})
     .then(() => {
       this.set("isSecurityEnabled", true);
       this.securityDashboard();
@@ -31,8 +32,8 @@ export default Ember.Component.extend({
     });
   },
 
-  isEmptyOrganization: Ember.computed("me.org.is_owner", function() {
-    const organization = this.get("organization");
+  isEmptyOrganization: computed("me.org.is_owner", function() {
+    const organization = this.organization;
     const isOwner = this.get("me.org.is_owner")
     if(isOwner) {
       const orgName = organization.selected.get("name");
@@ -42,7 +43,7 @@ export default Ember.Component.extend({
     }
   }),
 
-  showBilling: Ember.computed(
+  showBilling: computed(
     'me.org.is_owner', 'organization.selected.showBilling',
     function() {
       const orgShowBilling = this.get('organization.selected.showBilling');
@@ -53,12 +54,12 @@ export default Ember.Component.extend({
 
   securityDashboard() {
     if(window.location.pathname.startsWith("/security")) {
-      const isSecurityEnabled = this.get("isSecurityEnabled");
+      const isSecurityEnabled = this.isSecurityEnabled;
       if(isSecurityEnabled) {
         this.set("isSecurityDashboard", true);
       }
       else {
-        Ember.getOwner(this).lookup('route:authenticated').transitionTo("authenticated.projects");
+        getOwner(this).lookup('route:authenticated').transitionTo("authenticated.projects");
       }
       this.set("isLoaded", true);
     }
@@ -74,32 +75,32 @@ export default Ember.Component.extend({
   /* Update org name */
   updateOrgName: task(function * () {
     this.set("isUpdatingOrg", true);
-    const org = this.get('organization').selected;
-    org.set('name', this.get("organizationName"));
+    const org = this.organization.selected;
+    org.set('name', this.organizationName);
     yield org.save();
   }).evented(),
 
   updateOrgNameSucceeded: on('updateOrgName:succeeded', function() {
-    this.get('notify').success(this.get('tOrganizationNameUpdated'));
+    this.notify.success(this.tOrganizationNameUpdated);
     this.set("isEmptyOrganization", false);
     this.set("isUpdatingOrg", false);
   }),
 
   updateOrgNameErrored: on('updateOrgName:errored', function(_, err) {
-    let errMsg = this.get('tSomethingWentWrong');
+    let errMsg = this.tSomethingWentWrong;
     if (err.errors && err.errors.length) {
       errMsg = err.errors[0].detail || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
     this.set("isUpdatingOrg", false);
-    this.get("notify").error(errMsg);
+    this.notify.error(errMsg);
   }),
 
   actions: {
     invalidateSession() {
       triggerAnalytics('logout');
-      this.get('session').invalidate();
+      this.session.invalidate();
     }
   }
 

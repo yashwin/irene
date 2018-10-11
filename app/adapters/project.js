@@ -8,7 +8,7 @@ export default DRFAdapter.extend(DataAdapterMixin, {
   addTrailingSlashes: false,
   authorizer: 'authorizer:irene',
   queryRecord: function (store, type, query) {
-    let url = `${this.get('host')}/${this.get('namespace')}/projects/${query.id}`;
+    let url = `${this.host}/${this.namespace}/projects/${query.id}`;
     return this.ajax(url, 'GET');
   }
 });

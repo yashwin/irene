@@ -1,17 +1,18 @@
 // jshint ignore: start
-import Ember from 'ember';
+import { computed } from '@ember/object';
+import { filter, alias, gt } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
+import { isEmpty } from '@ember/utils';
 import ENV from 'irene/config/environment';
 import ENUMS from 'irene/enums';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-
-const isEmpty = inputValue=> Ember.isEmpty(inputValue);
-
-const FileHeaderComponent = Ember.Component.extend({
+const FileHeaderComponent = Component.extend({
 
   roleId: 0,
-  userRoles: [],
+  userRoles: [], // eslint-disable-line
   globalAlpha:0.4,
   radiusRatio:0.9,
   isBasicInfo: false,
@@ -26,13 +27,13 @@ const FileHeaderComponent = Ember.Component.extend({
   showRemoveRoleConfirmBox: false,
   progress: 0,
 
-  i18n: Ember.inject.service(),
-  trial: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  trial: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
-  vpnStatuses: ["yes", "no"],
-  loginStatuses: ["yes", "no"],
+  vpnStatuses: ["yes", "no"], // eslint-disable-line
+  loginStatuses: ["yes", "no"], // eslint-disable-line
   appActions: ENUMS.APP_ACTION.CHOICES.slice(0, -1),
   environments: ENUMS.APP_ENV.CHOICES.slice(0, -1),
 
@@ -46,49 +47,49 @@ const FileHeaderComponent = Ember.Component.extend({
   tPleaseEnterUserRoles: t("modalCard.manual.pleaseEnterUserRoles"),
   tPleaseEnterVPNDetails: t("modalCard.manual.pleaseEnterVPNDetails"),
 
-  manualscan: (function() {
+  manualscan: computed(function() {
     const fileId = this.get("file.id");
-    return this.get("store").findRecord("manualscan", fileId);
-  }).property(),
+    return this.store.findRecord("manualscan", fileId);
+  }),
 
-  unknownAnalysisStatus: (function() {
-    return this.get("store").queryRecord('unknown-analysis-status', {id: this.get("file.profile.id")});
-  }).property(),
+  unknownAnalysisStatus: computed(function() {
+    return this.store.queryRecord('unknown-analysis-status', {id: this.get("file.profile.id")});
+  }),
 
-  analyses: (function() {
+  analyses: computed("file.sortedAnalyses", function() {
     return this.get("file.sortedAnalyses");
-  }).property("file.sortedAnalyses"),
+  }),
 
-  filteredEnvironments: (function() {
-    const environments = this.get("environments");
+  filteredEnvironments: computed("environments", "manualscan.filteredAppEnv", function() {
+    const environments = this.environments;
     const appEnv = parseInt(this.get("manualscan.filteredAppEnv"));
     return environments.filter(env => appEnv !== env.value);
-  }).property("environments", "manualscan.filteredAppEnv"),
+  }),
 
-  filteredAppActions: (function() {
-    const appActions = this.get("appActions");
+  filteredAppActions: computed("appActions", "manualscan.filteredAppAction", function() {
+    const appActions = this.appActions;
     const appAction =  parseInt(this.get("manualscan.filteredAppAction"));
     return appActions.filter(action => appAction !== action.value);
-  }).property("appActions", "manualscan.filteredAppAction"),
+  }),
 
-  filteredLoginStatuses: (function() {
-    const loginStatuses = this.get("loginStatuses");
+  filteredLoginStatuses: computed("loginStatuses", "manualscan.loginStatus", function() {
+    const loginStatuses = this.loginStatuses;
     const loginStatus = this.get("manualscan.loginStatus");
     return loginStatuses.filter(status => loginStatus !== status);
-  }).property("loginStatuses", "manualscan.loginStatus"),
+  }),
 
-  filteredVpnStatuses: (function() {
-    const vpnStatuses = this.get("vpnStatuses");
+  filteredVpnStatuses: computed("vpnStatuses", "manualscan.vpnStatus", function() {
+    const vpnStatuses = this.vpnStatuses;
     const vpnStatus = this.get("manualscan.vpnStatus");
     return vpnStatuses.filter(status => vpnStatus !== status);
-  }).property("vpnStatuses", "manualscan.vpnStatus"),
+  }),
 
   chartOptions: (() =>
     ({
       legend: { display: false },
       animation: {animateRotate: false}
     })
-  ).property(),
+  ),
 
   barChartOptions: (() =>
     ({
@@ -101,67 +102,67 @@ const FileHeaderComponent = Ember.Component.extend({
       },
       scales: { yAxes: [{ ticks: { beginAtZero:true, stepSize: 3 } }]},
     })
-  ).property(),
+  ),
 
   didInsertElement() {
-    const tPasswordCopied = this.get("tPasswordCopied");
-    const tPleaseTryAgain = this.get("tPleaseTryAgain");
+    const tPasswordCopied = this.tPasswordCopied;
+    const tPleaseTryAgain = this.tPleaseTryAgain;
     // eslint-disable-next-line no-undef
     const clipboard = new Clipboard('.copy-password');
     this.set("clipboard", clipboard)
     clipboard.on('success', (e) => {
-      this.get("notify").info(tPasswordCopied);
+      this.notify.info(tPasswordCopied);
       e.clearSelection();
     });
-    clipboard.on('error', () => this.get("notify").error(tPleaseTryAgain));
+    clipboard.on('error', () => this.notify.error(tPleaseTryAgain));
   },
 
   willDestroyElement() {
-    const clipboard = this.get("clipboard");
+    const clipboard = this.clipboard;
     clipboard.destroy();
   },
 
   confirmCallback() {
-    const availableRoles = this.get("availableRoles");
+    const availableRoles = this.availableRoles;
     this.set("manualscan.userRoles", availableRoles);
     this.set("showRemoveRoleConfirmBox", false);
   },
 
-  allUserRoles: (function() {
+  allUserRoles: computed("manualscan.userRoles", function() {
     const userRoles = this.get("manualscan.userRoles");
-    let roleId = this.get("roleId")
+    let roleId = this.roleId
     userRoles.forEach((role) => {
       roleId = roleId + 1;
       role.id = roleId;
       return this.set("roleId", roleId);
     });
     return userRoles;
-  }).property("manualscan.userRoles"),
+  }),
 
-  availableRoles: Ember.computed.filter('allUserRoles', function(userRole) {
+  availableRoles: filter('allUserRoles', function(userRole) {
     const { id } = userRole;
-    const deletedRole = this.get("deletedRole");
+    const deletedRole = this.deletedRole;
     return id !== deletedRole;
   }),
 
-  userRoleCount: Ember.computed.alias('manualscan.userRoles.length'),
+  userRoleCount: alias('manualscan.userRoles.length'),
 
-  hasUserRoles: Ember.computed.gt('userRoleCount', 0),
+  hasUserRoles: gt('userRoleCount', 0),
 
-  scanDetailsClass: Ember.computed('isScanDetails', function() {
-    if (this.get('isScanDetails')) {
+  scanDetailsClass: computed('isScanDetails', function() {
+    if (this.isScanDetails) {
       return 'is-active';
     }
   }),
 
-  owaspDetailsClass: Ember.computed('isOWASPDetails', function() {
-    if (this.get('isOWASPDetails')) {
+  owaspDetailsClass: computed('isOWASPDetails', function() {
+    if (this.isOWASPDetails) {
       return 'is-active';
     }
   }),
 
-  owasps: Ember.computed('analyses', function() {
-    const analyses = this.get("analyses");
+  owasps: computed('analyses', function() {
+    const analyses = this.analyses;
     var owasps = [];
     const risks = [ENUMS.RISK.CRITICAL, ENUMS.RISK.HIGH, ENUMS.RISK.MEDIUM, ENUMS.RISK.LOW];
     for(let analysis of analyses) {
@@ -174,8 +175,8 @@ const FileHeaderComponent = Ember.Component.extend({
     return owasps
   }),
 
-  owaspData: (function() {
-    const owasps = this.get("owasps");
+  owaspData: computed("owasps", "owaspA5Count", "owaspA3Count", function() {
+    const owasps = this.owasps;
     var owaspA1Count = 0, owaspA2Count = 0, owaspA3Count = 0, owaspA4Count = 0,
     owaspA5Count = 0, owaspA6Count = 0, owaspA7Count = 0, owaspA8Count = 0,
     owaspA9Count = 0, owaspA10Count = 0, owaspM1Count = 0, owaspM2Count = 0,
@@ -269,7 +270,7 @@ const FileHeaderComponent = Ember.Component.extend({
         } ]
       }
     };
-  }).property("owasps", "owaspA5Count", "owaspA3Count"),
+  }),
 
   actions: {
 
@@ -285,11 +286,11 @@ const FileHeaderComponent = Ember.Component.extend({
 
     getPDFReportLink() {
       triggerAnalytics('feature', ENV.csb.reportDownload);
-      const tReportIsGettingGenerated = this.get("tReportIsGettingGenerated");
+      const tReportIsGettingGenerated = this.tReportIsGettingGenerated;
       const fileId = this.get("file.id");
       const url = [ENV.endpoints.signedPdfUrl, fileId].join('/');
       this.set("isDownloadingReport", true);
-      this.get("ajax").request(url)
+      this.ajax.request(url)
       .then((result) => {
         if(!this.isDestroyed) {
           window.location = result.url;
@@ -302,7 +303,7 @@ const FileHeaderComponent = Ember.Component.extend({
         // eslint-disable-next-line no-console
         console.log(error);
         this.set("isDownloadingReport", false);
-        this.get("notify").error(tReportIsGettingGenerated);
+        this.notify.error(tReportIsGettingGenerated);
       });
     },
 
@@ -347,34 +348,34 @@ const FileHeaderComponent = Ember.Component.extend({
     },
 
     displayAppInfo() {
-      this.set("isBasicInfo", !this.get("isBasicInfo"));
+      this.set("isBasicInfo", !this.isBasicInfo);
       this.set('isLoginDetails', false);
       this.set('isVPNDetails', false);
     },
 
     displayLoginDetails() {
       this.set('isBasicInfo', false);
-      this.set('isLoginDetails', !this.get("isLoginDetails"));
+      this.set('isLoginDetails', !this.isLoginDetails);
       this.set('isVPNDetails', false);
     },
 
     displayVPNDetails() {
       this.set('isBasicInfo', false);
       this.set('isLoginDetails', false);
-      this.set('isVPNDetails', !this.get("isVPNDetails"));
+      this.set('isVPNDetails', !this.isVPNDetails);
     },
 
     addUserRole() {
-      const newUserRole = this.get("newUserRole");
-      const username = this.get("username");
-      const password = this.get("password");
-      const tRoleAdded = this.get("tRoleAdded");
-      const tPleaseEnterAllValues = this.get("tPleaseEnterAllValues");
+      const newUserRole = this.newUserRole;
+      const username = this.username;
+      const password = this.password;
+      const tRoleAdded = this.tRoleAdded;
+      const tPleaseEnterAllValues = this.tPleaseEnterAllValues;
       for (let inputValue of [newUserRole, username, password]) {
-        if (isEmpty(inputValue)) { return this.get("notify").error(tPleaseEnterAllValues); }
+        if (isEmpty(inputValue)) { return this.notify.error(tPleaseEnterAllValues); }
       }
       let userRoles = this.get("manualscan.userRoles");
-      let roleId = this.get("roleId");
+      let roleId = this.roleId;
       roleId = roleId + 1;
       const userRole = {
         "id": roleId,
@@ -382,13 +383,13 @@ const FileHeaderComponent = Ember.Component.extend({
         "username": username,
         "password": password
       };
-      if (Ember.isEmpty(userRoles)) {
+      if (isEmpty(userRoles)) {
         userRoles = [];
       }
       userRoles.addObject(userRole);
       this.set("manualscan.userRoles", userRoles);
       this.set("roleId", roleId);
-      this.get("notify").success(tRoleAdded);
+      this.notify.success(tRoleAdded);
       this.setProperties({
         newUserRole: "",
         username: "",
@@ -410,20 +411,20 @@ const FileHeaderComponent = Ember.Component.extend({
         email: contactEmail
       };
 
-      const tPleaseEnterUserRoles = this.get("tPleaseEnterUserRoles");
+      const tPleaseEnterUserRoles = this.tPleaseEnterUserRoles;
 
       const loginRequired =  this.get("manualscan.loginRequired");
       const userRoles = this.get("manualscan.userRoles");
 
       if (loginRequired) {
-        if (isEmpty(userRoles)) { return this.get("notify").error(tPleaseEnterUserRoles); }
+        if (isEmpty(userRoles)) { return this.notify.error(tPleaseEnterUserRoles); }
       }
 
       if (userRoles) {
         userRoles.forEach(userRole => delete userRole.id);
       }
 
-      const tPleaseEnterVPNDetails = this.get("tPleaseEnterVPNDetails");
+      const tPleaseEnterVPNDetails = this.tPleaseEnterVPNDetails;
 
       const vpnRequired = this.get("manualscan.vpnRequired");
 
@@ -432,7 +433,7 @@ const FileHeaderComponent = Ember.Component.extend({
 
       if (vpnRequired) {
         for (let inputValue of [vpnAddress, vpnPort]) {
-          if (isEmpty(inputValue)) { return this.get("notify").error(tPleaseEnterVPNDetails); }
+          if (isEmpty(inputValue)) { return this.notify.error(tPleaseEnterVPNDetails); }
         }
       }
 
@@ -461,14 +462,14 @@ const FileHeaderComponent = Ember.Component.extend({
         additional_comments: additionalComments
       };
 
-      const tManualRequested = this.get("tManualRequested");
+      const tManualRequested = this.tManualRequested;
       this.set("isRequestingManual", true);
       const fileId = this.get("file.id");
       const url = [ENV.endpoints.manualscans, fileId].join('/');
-      this.get("ajax").put(url, {data: JSON.stringify(data), contentType: 'application/json'})
+      this.ajax.put(url, {data: JSON.stringify(data), contentType: 'application/json'})
       .then(() => {
         triggerAnalytics('feature', ENV.csb.requestManualScan);
-        this.get("notify").info(tManualRequested);
+        this.notify.info(tManualRequested);
         if(!this.isDestroyed) {
           this.set("isRequestingManual", false);
           this.set("file.ifManualNotRequested", false);
@@ -477,7 +478,7 @@ const FileHeaderComponent = Ember.Component.extend({
         }
       }, (error) => {
         this.set("isRequestingManual", false);
-        this.get("notify").error(error.payload.error);
+        this.notify.error(error.payload.error);
       })
     },
 
@@ -511,21 +512,21 @@ const FileHeaderComponent = Ember.Component.extend({
 
 
     rescanApp() {
-      const tRescanInitiated = this.get("tRescanInitiated");
+      const tRescanInitiated = this.tRescanInitiated;
       const fileId = this.get("file.id");
       const data =
         {file_id: fileId};
       this.set("isStartingRescan", true);
-      this.get("ajax").post(ENV.endpoints.rescan, {data})
+      this.ajax.post(ENV.endpoints.rescan, {data})
       .then(() => {
-        this.get("notify").info(tRescanInitiated);
+        this.notify.info(tRescanInitiated);
         if(!this.isDestroyed) {
           this.set("isStartingRescan", false);
           this.set("showRescanModal", false);
         }
       }, (error) => {
         this.set("isStartingRescan", false);
-        this.get("notify").error(error.payload.detail);
+        this.notify.error(error.payload.detail);
         this.set("showRescanModal", false);
       });
     }

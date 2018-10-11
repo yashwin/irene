@@ -1,13 +1,16 @@
-import Ember from 'ember';
+import { debounce } from '@ember/runloop';
+import { computed, observer } from '@ember/object';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import PaginateMixin from 'irene/mixins/paginate';
 import { translationMacro as t } from 'ember-i18n';
 import { task } from 'ember-concurrency';
 import { on } from '@ember/object/evented';
 
-export default Ember.Component.extend(PaginateMixin, {
-  i18n: Ember.inject.service(),
-  realtime: Ember.inject.service(),
-  notify: Ember.inject.service(),
+export default Component.extend(PaginateMixin, {
+  i18n: service(),
+  realtime: service(),
+  notify: service(),
 
   query: '',
   searchQuery: '',
@@ -18,16 +21,16 @@ export default Ember.Component.extend(PaginateMixin, {
   tPleaseTryAgain: t('pleaseTryAgain'),
 
   targetObject: 'organization-team',
-  sortProperties: ['created:desc'],
-  extraQueryStrings: Ember.computed('team.id', 'searchQuery', function() {
+  sortProperties: ['created:desc'], // eslint-disable-line
+  extraQueryStrings: computed('team.id', 'searchQuery', function() {
     const query = {
-      q: this.get('searchQuery'),
+      q: this.searchQuery,
       exclude_project: this.get('project.id')
     };
     return JSON.stringify(query, Object.keys(query).sort());
   }),
 
-  newProjectNonTeamCountersObserver: Ember.observer('realtime.ProjectNonTeamCounter', function() {
+  newProjectNonTeamCountersObserver: observer('realtime.ProjectNonTeamCounter', function() {
     return this.incrementProperty('version');
   }),
 
@@ -46,26 +49,26 @@ export default Ember.Component.extend(PaginateMixin, {
     };
     yield team.addProject(data, project.id);
 
-    this.get('realtime').incrementProperty('ProjectTeamCounter');
-    this.get('sortedObjects').removeObject(team);
+    this.realtime.incrementProperty('ProjectTeamCounter');
+    this.sortedObjects.removeObject(team);
   }).evented(),
 
   addProjectTeamSucceeded: on('addProjectTeam:succeeded', function() {
-    this.get('notify').success(this.get('tProjectTeamAdded'));
+    this.notify.success(this.tProjectTeamAdded);
 
     this.set('isAddingTeam', false);
     this.set('query', '');
   }),
 
   addProjectTeamErrored: on('addProjectTeam:errored', function(_, err) {
-    let errMsg = this.get('tPleaseTryAgain');
+    let errMsg = this.tPleaseTryAgain;
     if (err.errors && err.errors.length) {
       errMsg = err.errors[0].detail || errMsg;
     } else if(err.message) {
       errMsg = err.message;
     }
 
-    this.get('notify').error(errMsg);
+    this.notify.error(errMsg);
 
     this.set('isAddingTeam', false);
     this.set('query', '');
@@ -73,12 +76,12 @@ export default Ember.Component.extend(PaginateMixin, {
 
   /* Set debounced searchQuery */
   setSearchQuery() {
-    this.set('searchQuery', this.get('query'));
+    this.set('searchQuery', this.query);
   },
 
   actions: {
     searchQuery() {
-      Ember.run.debounce(this, this.setSearchQuery, 500);
+      debounce(this, this.setSearchQuery, 500);
     },
   }
 

@@ -12,9 +12,9 @@ export default DS.Model.extend({
     var adapter = this.store.adapterFor(this.constructor.modelName);
     await adapter.deleteMember(this.store, this.constructor.modelName, this, member);
     // TODO: fix this to do after showing notification
-    this.get('members').removeObject(member);
-    await this.get('members').reload();
-    await this.get('store').unloadRecord(member);
+    this.members.removeObject(member);
+    await this.members.reload();
+    await this.store.unloadRecord(member);
   },
 
   async addMember(data, id) {

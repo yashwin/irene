@@ -1,10 +1,11 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Route from '@ember/routing/route';
 import config from 'irene/config/environment';
 import ScrollTopMixin from 'irene/mixins/scroll-top';
 
-const AuthenticatedBillingRoute = Ember.Route.extend(ScrollTopMixin, {
+const AuthenticatedBillingRoute = Route.extend(ScrollTopMixin, {
   title: `Billing${config.platform}`,
-  organization: Ember.inject.service('organization'),
+  organization: service('organization'),
   model() {
     return this.get('organization.selected');
   }

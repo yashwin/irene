@@ -1,14 +1,15 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
 const isValidPassword = password=> password.length > 5;
 
-const PasswordChangeComponent = Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const PasswordChangeComponent = Component.extend({
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   passwordCurrent: "",
   passwordNew: "",
   passwordConfirm: "",
@@ -19,27 +20,27 @@ const PasswordChangeComponent = Ember.Component.extend({
 
   actions: {
     changePassword() {
-      const tEnterValidPassword = this.get("tEnterValidPassword");
-      const tInvalidPassword = this.get("tInvalidPassword");
-      const tPasswordChanged = this.get("tPasswordChanged");
-      const passwordCurrent = this.get("passwordCurrent");
-      const passwordNew = this.get("passwordNew");
-      const passwordConfirm = this.get("passwordConfirm");
+      const tEnterValidPassword = this.tEnterValidPassword;
+      const tInvalidPassword = this.tInvalidPassword;
+      const tPasswordChanged = this.tPasswordChanged;
+      const passwordCurrent = this.passwordCurrent;
+      const passwordNew = this.passwordNew;
+      const passwordConfirm = this.passwordConfirm;
       for (let password of [passwordCurrent, passwordNew, passwordConfirm]) {
-        if (!isValidPassword(password)) { return this.get("notify").error(tEnterValidPassword); }
+        if (!isValidPassword(password)) { return this.notify.error(tEnterValidPassword); }
       }
       if (passwordNew !== passwordConfirm) {
-        return this.get("notify").error(tInvalidPassword);
+        return this.notify.error(tInvalidPassword);
       }
       const data = {
         password: passwordCurrent,
         newPassword: passwordNew
       };
       this.set("isChangingPassword", true);
-      const ajax = this.get("ajax");
+      const ajax = this.ajax;
       ajax.post(ENV.endpoints.changePassword, {data})
       .then(() => {
-        this.get("notify").success(tPasswordChanged);
+        this.notify.success(tPasswordChanged);
         triggerAnalytics('feature',ENV.csb.changePassword);
         if(!this.isDestroyed) {
           this.set("isChangingPassword", false);
@@ -52,7 +53,7 @@ const PasswordChangeComponent = Ember.Component.extend({
         }
       }, (error) => {
         this.set("isChangingPassword", false);
-        this.get("notify").error(error.payload.message);
+        this.notify.error(error.payload.message);
       });
     }
   }

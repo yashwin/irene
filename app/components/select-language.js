@@ -1,5 +1,7 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import ENV from 'irene/config/environment';
+import { inject as service } from '@ember/service';
 
 const localeStrings = {
   "en": "English",
@@ -8,21 +10,21 @@ const localeStrings = {
 
 const getLocaleString = locale=> localeStrings[locale];
 
-const SelectLanguageComponent = Ember.Component.extend({
+const SelectLanguageComponent = Component.extend({
 
   classNames: ["control"],
   isSelectingLanguage: false,
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  moment: Ember.inject.service(),
+  i18n: service(),
+  ajax: service(),
+  moment: service(),
 
-  currentLocale: ( function() {
+  currentLocale: computed("i18n.locale", function() {
     const locale = this.get("i18n.locale");
     const localeString = getLocaleString(locale);
     return {locale, localeString};
-  }).property("i18n.locale"),
+  }),
 
-  otherLocales: ( function() {
+  otherLocales: computed("i18n.locale", function() {
     const locales = [];
     let locale = this.get("i18n.locale");
     const otherLocales = this.get("i18n.locales").slice();
@@ -32,24 +34,24 @@ const SelectLanguageComponent = Ember.Component.extend({
       locales.push({locale, localeString});
     }
     return locales;
-  }).property("i18n.locale"),
+  }),
 
   actions: {
     setLocale() {
       const lang = this.$('select').val();
       this.set('i18n.locale', lang);
-      this.get('moment').changeLocale(lang);
+      this.moment.changeLocale(lang);
       const data =
         {lang};
       this.set("isSelectingLanguage", true);
-      this.get("ajax").post(ENV.endpoints.lang, {data})
+      this.ajax.post(ENV.endpoints.lang, {data})
       .then(() =>  {
         if(!this.isDestroyed) {
           window.location.reload();
         }
       }, (error) => {
         this.set("isSelectingLanguage", false);
-        this.get("notify").error(error.payload.message);
+        this.notify.error(error.payload.message);
       });
     }
   }

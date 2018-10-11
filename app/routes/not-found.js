@@ -1,7 +1,7 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
 import config from 'irene/config/environment';
 
-const NotFoundRoute = Ember.Route.extend({
+const NotFoundRoute = Route.extend({
   title: `Not Found${config.platform}`,
   redirect() {
     const url = this.router.location.formatURL('/not-found');

@@ -1,12 +1,13 @@
-import Ember from 'ember';
+import $ from 'jquery';
 import ENV from 'irene/config/environment';
+import EmberRouter from '@ember/routing/router';
 
-const Router = Ember.Router.extend({
+const Router = EmberRouter.extend({
   location: ENV.locationType,
   rootURL: ENV.rootURL
 });
 
-Ember.$('body').addClass('theme-' + ENV.whitelabel.theme);
+$('body').addClass('theme-' + ENV.whitelabel.theme);
 
 Router.map(function() {
   this.route('freestyle');
@@ -27,7 +28,7 @@ Router.map(function() {
       this.route('namespaces', {path: '/namespaces'});
       this.route('members', {path: '/members'});
       this.route('teams', {path: '/teams'});
-      this.route('team', {path: '/team/:teamId'});
+      this.route('team', {path: '/team/:team_id'});
       this.route('settings');
     });
     this.route("settings", {path: '/settings'}, function() {
@@ -37,12 +38,12 @@ Router.map(function() {
     });
     this.route("billing", {path: '/billing'});
     this.route('projects', {path: '/projects'});
-    this.route("project", {path: '/project/:projectId'}, function() {
+    this.route("project", {path: '/project/:project_id'}, function() {
       this.route('settings');
       this.route('files');
     });
-    this.route("file", {path: '/file/:fileId'});
-    this.route("choose",{path: '/choose/:fileId'});
+    this.route("file", {path: '/file/:file_id'});
+    this.route("choose",{path: '/choose/:file_id'});
     this.route('compare', {path: '/compare/:files'});
     this.route('payment-success');
     this.route('payment-failure');
@@ -50,9 +51,9 @@ Router.map(function() {
       this.route('projects');
       this.route('downloadapp');
       this.route('purgeanalysis');
-      this.route('files', {path: '/:projectId/files'});
-      this.route('file', {path: '/file/:fileId'});
-      this.route('analysis', {path: '/analysis/:analysisId'});
+      this.route('files', {path: '/:project_id/files'});
+      this.route('file', {path: '/file/:file_id'});
+      this.route('analysis', {path: '/analysis/:analysis_id'});
     });
     this.route('status');
   });

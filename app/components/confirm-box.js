@@ -1,6 +1,6 @@
-import Ember from 'ember';
+import Component from '@ember/component';
 
-const ConfirmBoxComponent = Ember.Component.extend({
+const ConfirmBoxComponent = Component.extend({
 
   isActive: false,
   classNames: ["modal"],
@@ -15,14 +15,14 @@ const ConfirmBoxComponent = Ember.Component.extend({
 
     clearModal() {
       this.set("isActive", false);
-      this.get("cancelAction")();
+      this.cancelAction();
     },
 
     sendCallback() {
-      const delegate = this.get("delegate");
-      this.get("confirmAction")();
+      const delegate = this.delegate;
+      this.confirmAction();
       if (delegate && delegate.confirmCallback) {
-        delegate.confirmCallback(this.get("key"));
+        delegate.confirmCallback(this.key);
       }
     }
   }

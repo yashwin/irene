@@ -1,24 +1,25 @@
-import Ember from 'ember';
+import { isEmpty } from '@ember/utils';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 
-export default Ember.Component.extend({
+export default Component.extend({
   actions: {
     purgeAPIAnalyses() {
-      const fileId = this.get("fileNumber");
-      if (Ember.isEmpty(fileId)) {
-        return this.get("notify").error("Please enter any File ID");
+      const fileId = this.fileNumber;
+      if (isEmpty(fileId)) {
+        return this.notify.error("Please enter any File ID");
       }
       this.set("isPurgingAPIAnalyses", true);
       const url = [ENV.endpoints.files,fileId, ENV.endpoints.purgeAPIAnalyses].join('/');
-      return this.get("ajax").post(url, { namespace: 'api/hudson-api'})
+      return this.ajax.post(url, { namespace: 'api/hudson-api'})
       .then(() => {
         this.set("isPurgingAPIAnalyses", false);
-        this.get("notify").success("Successfully Purged the Analysis");
+        this.notify.success("Successfully Purged the Analysis");
         this.set("fileNumber", "");
       }, (error) => {
         this.set("isPurgingAPIAnalyses", false);
         for (error of error.errors) {
-          this.get("notify").error(error.detail.error);
+          this.notify.error(error.detail.error);
         }
       });
     }

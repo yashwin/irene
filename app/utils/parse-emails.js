@@ -1,4 +1,4 @@
-import {validate} from 'ember-validators';
+import { validate } from 'ember-validators';
 
 function validateEmail(email) {
   return validate('format', email, { type: 'email' }, null, 'email');

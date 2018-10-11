@@ -1,20 +1,21 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import ENUMS from 'irene/enums';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 import poll from 'irene/services/poll';
 
-export default Ember.Component.extend({
+export default Component.extend({
   tagName: "",
   apiScanModal: false,
   dynamicScanModal: false,
 
-  i18n: Ember.inject.service(),
-  trial: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
-  poll: Ember.inject.service(),
+  i18n: service(),
+  trial: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
+  poll: service(),
 
   tStartingScan: t("startingScan"),
 
@@ -25,17 +26,17 @@ export default Ember.Component.extend({
   actions: {
 
     setAPIScanOption() {
-      const tStartingScan = this.get("tStartingScan");
-      const isApiScanEnabled = this.get("isApiScanEnabled");
+      const tStartingScan = this.tStartingScan;
+      const isApiScanEnabled = this.isApiScanEnabled;
       const data = {
         isApiScanEnabled: isApiScanEnabled === true
       };
-      const file = this.get('file');
+      const file = this.file;
       const fileId = file.id;
       const dynamicUrl = [ENV.endpoints.dynamic, fileId].join('/');
-      this.get("ajax").put(dynamicUrl, {data})
+      this.ajax.put(dynamicUrl, {data})
         .then(() => {
-          this.get("notify").success(tStartingScan);
+          this.notify.success(tStartingScan);
           file.setBootingStatus();
           if(!this.isDestroyed) {
             this.send('pollDynamicStatus');
@@ -45,7 +46,7 @@ export default Ember.Component.extend({
         }, (error) => {
           file.setNone();
           this.set("startingDynamicScan", false);
-          this.get("notify").error(error.payload.error);
+          this.notify.error(error.payload.error);
         });
     },
 
@@ -59,7 +60,7 @@ export default Ember.Component.extend({
         return;
       }
       var stopPoll = poll(() => {
-        return this.get('store').find('file', fileId)
+        return this.store.find('file', fileId)
           .then(() => {
             const dynamicStatus = this.get('file.dynamicStatus');
             if (dynamicStatus === ENUMS.DYNAMIC_STATUS.NONE || dynamicStatus === ENUMS.DYNAMIC_STATUS.READY) {
@@ -110,10 +111,10 @@ export default Ember.Component.extend({
 
     goBack() {
       this.set("showAPIURLFilterScanModal", false);
-      if (this.get("apiScanModal")) {
+      if (this.apiScanModal) {
         this.set("showAPIScanModal", true);
       }
-      if (this.get("dynamicScanModal")) {
+      if (this.dynamicScanModal) {
         this.set("showRunDynamicScanModal", true);
       }
     },
@@ -133,12 +134,12 @@ export default Ember.Component.extend({
     },
 
     dynamicShutdown() {
-      const file = this.get("file");
+      const file = this.file;
       file.setShuttingDown();
       this.set("isPoppedOut", false);
       const fileId = this.get("file.id");
       const dynamicUrl = [ENV.endpoints.dynamic, fileId].join('/');
-      this.get("ajax").delete(dynamicUrl)
+      this.ajax.delete(dynamicUrl)
       .then(() => {
         if(!this.isDestroyed) {
           this.send('pollDynamicStatus');
@@ -147,7 +148,7 @@ export default Ember.Component.extend({
       },(error) => {
         file.setNone();
         this.set("startingDynamicScan", false);
-        this.get("notify").error(error.payload.error);
+        this.notify.error(error.payload.error);
       });
     },
 

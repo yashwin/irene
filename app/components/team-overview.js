@@ -1,13 +1,14 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 
-const TeamOverviewComponent = Ember.Component.extend({
+const TeamOverviewComponent = Component.extend({
 
-  i18n: Ember.inject.service(),
+  i18n: service(),
   team: null,
   organization: null,
-  tagName: ["tr"],
+  tagName: "tr",
 
   isDeletingTeam: false,
 
@@ -16,22 +17,22 @@ const TeamOverviewComponent = Ember.Component.extend({
   tEnterRightTeamName: t("enterRightTeamName"),
 
   promptCallback(promptedItem) {
-    const tTeam = this.get("tTeam");
-    const tTeamDeleted = this.get("tTeamDeleted");
-    const tEnterRightTeamName = this.get("tEnterRightTeamName");
-    const team = this.get("team");
+    const tTeam = this.tTeam;
+    const tTeamDeleted = this.tTeamDeleted;
+    const tEnterRightTeamName = this.tEnterRightTeamName;
+    const team = this.team;
     const deletedTeam = team.get("name");
     const teamName = deletedTeam.toLowerCase();
     const promptedTeam = promptedItem.toLowerCase();
     if (promptedTeam !== teamName) {
-      return this.get("notify").error(tEnterRightTeamName);
+      return this.notify.error(tEnterRightTeamName);
     }
     this.set("isDeletingTeam", true);
     const orgId = this.get("organization.id");
     const teamId = this.get("team.id");
     const url = [ENV.endpoints.organizations, orgId, ENV.endpoints.teams, teamId].join('/');
     const that = this;
-    this.get("ajax").delete(url)
+    this.ajax.delete(url)
     .then(function(){
       that.set("isDeletingTeam", false);
       that.get("notify").success(`${tTeam} - ${deletedTeam} ${tTeamDeleted} `);
@@ -40,7 +41,7 @@ const TeamOverviewComponent = Ember.Component.extend({
     .catch(function(error) {
       that.set("isDeletingTeam", false);
       for (error of error.errors) {
-        this.get("notify").error(error.title || undefined);
+        this.notify.error(error.title || undefined);
       }
     });
   },

@@ -1,50 +1,42 @@
-import Ember from 'ember';
+import { run } from '@ember/runloop';
 import tHelper from 'ember-i18n/helper';
 import localeConfig from 'ember-i18n/config/en';
-import { test, moduleForComponent } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupTest } from 'ember-qunit';
 import { startMirage } from 'irene/initializers/ember-cli-mirage';
 
-moduleForComponent('github-account', 'Integration | Component | github account', {
-  unit: true,
-  needs: [
-    'service:i18n',
-    'service:ajax',
-    'service:notification-messages-service',
-    'service:session',
-    'locale:en/translations',
-    'locale:en/config',
-    'util:i18n/missing-message',
-    'util:i18n/compile-template',
-    'config:environment'
-  ],
-  beforeEach() {
+module('Integration | Component | github account', function(hooks) {
+  setupTest(hooks);
+
+  hooks.beforeEach(function() {
     // set the locale and the config
-    Ember.getOwner(this).lookup('service:i18n').set('locale', 'en');
-    this.register('locale:en/config', localeConfig);
+    this.owner.lookup('service:i18n').set('locale', 'en');
+    this.owner.register('locale:en/config', localeConfig);
 
     // register t helper
-    this.register('helper:t', tHelper);
+    this.owner.register('helper:t', tHelper);
 
     // start Mirage
     this.server = startMirage();
-  },
-  afterEach() {
+  });
+
+  hooks.afterEach(function() {
     // shutdown Mirage
     this.server.shutdown();
-  }
-});
+  });
 
-test('tapping button fires an external action', function(assert) {
+  test('tapping button fires an external action', function(assert) {
 
-  var component = this.subject();
+    var component = this.owner.factoryFor('component:github-account').create();
 
-  Ember.run(function() {
-    component.send('openRevokeGithubConfirmBox');
-    assert.equal(component.get('showRevokeGithubConfirmBox'),true, "Open Modal");
-    component.send('closeRevokeGithubConfirmBox');
-    assert.equal(component.get('showRevokeGithubConfirmBox'),false, "Close Modal");
+    run(function() {
+      component.send('openRevokeGithubConfirmBox');
+      assert.equal(component.get('showRevokeGithubConfirmBox'),true, "Open Modal");
+      component.send('closeRevokeGithubConfirmBox');
+      assert.equal(component.get('showRevokeGithubConfirmBox'),false, "Close Modal");
 
-    assert.equal(component.confirmCallback(),undefined, "Confirm Callback");
+      assert.equal(component.confirmCallback(),undefined, "Confirm Callback");
 
+    });
   });
 });

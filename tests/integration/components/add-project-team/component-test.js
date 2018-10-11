@@ -1,10 +1,12 @@
-import { moduleForComponent, test } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
 
-moduleForComponent('add-project-team', 'Integration | Component | add project team', {
-  integration: true
-});
 
-test('it renders', function(assert) {
-  assert.ok(true);
-  assert.equal(this.$().text().trim(), '');
+module('Integration | Component | add project team', function(hooks) {
+  setupRenderingTest(hooks);
+
+  test('it renders', function(assert) {
+    assert.ok(true);
+    assert.dom('*').hasText('');
+  });
 });

@@ -1,13 +1,14 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 
-const GithubAccountComponent = Ember.Component.extend({
+const GithubAccountComponent = Component.extend({
 
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   isRevokingGithub: false,
   isIntegratingGithub: false,
@@ -15,11 +16,11 @@ const GithubAccountComponent = Ember.Component.extend({
   tGithubWillBeRevoked: t("githubWillBeRevoked"),
 
   confirmCallback() {
-    const tGithubWillBeRevoked = this.get("tGithubWillBeRevoked");
+    const tGithubWillBeRevoked = this.tGithubWillBeRevoked;
     this.set("isRevokingGithub", true);
-    this.get("ajax").post(ENV.endpoints.revokeGitHub)
+    this.ajax.post(ENV.endpoints.revokeGitHub)
     .then(() => {
-      this.get("notify").success(tGithubWillBeRevoked);
+      this.notify.success(tGithubWillBeRevoked);
       if(!this.isDestroyed) {
         this.send("closeRevokeGithubConfirmBox");
         this.set("user.hasGithubToken", false);
@@ -28,7 +29,7 @@ const GithubAccountComponent = Ember.Component.extend({
     }, (error) => {
       if(!this.isDestroyed) {
         this.set("isRevokingGithub", false);
-        this.get("notify").error(error.payload.error);
+        this.notify.error(error.payload.error);
       }
     });
   },

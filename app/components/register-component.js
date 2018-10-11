@@ -1,22 +1,23 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 import lookupValidator from 'ember-changeset-validations';
 import Changeset from 'ember-changeset';
 import RegisterValidation from '../validations/register';
 
-export default Ember.Component.extend({
+export default Component.extend({
 
   captcha: '',
-  registerPOJO: {},
-  serverErrors: {},
+  registerPOJO: {}, // eslint-disable-line
+  serverErrors: {}, // eslint-disable-line
   success: false,
 
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   init() {
     this._super(...arguments);
-    const registerPOJO = this.get('registerPOJO');
+    const registerPOJO = this.registerPOJO;
     const changeset = new Changeset(
       registerPOJO, lookupValidator(RegisterValidation), RegisterValidation
     );
@@ -24,14 +25,14 @@ export default Ember.Component.extend({
   },
 
   registerWithServer (data) {
-    return this.get('ajax').request(ENV.endpoints.registration, {
+    return this.ajax.request(ENV.endpoints.registration, {
       method: 'POST',
       data: data
     }).then(() => {
       this.set('success', true);
     }, (errors) => {
-      this.get('gRecaptcha').resetReCaptcha();
-      const changeset = this.get('changeset');
+      this.gRecaptcha.resetReCaptcha();
+      const changeset = this.changeset;
       Object.keys(errors.payload).forEach(key => {
         changeset.addError(key, errors.payload[key]);
       });
@@ -50,10 +51,10 @@ export default Ember.Component.extend({
           const passwordConfirmation = changeset.get('passwordConfirmation');
           const companyName = changeset.get('company');
           const phoneNumber = changeset.get('phone');
-          const selectedCountryData = this.get("selectedCountryData");
+          const selectedCountryData = this.selectedCountryData;
           const fullNumber = selectedCountryData.dialCode + '-' +  phoneNumber;
           const termsAccepted = changeset.get('termsAccepted');
-          const captcha = this.get('captcha');
+          const captcha = this.captcha;
           this.registerWithServer({
             'first_name': firstname,
             'last_name': lastname,

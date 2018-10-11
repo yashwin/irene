@@ -1,9 +1,10 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 
-const AttachmentDetailComponent = Ember.Component.extend({
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const AttachmentDetailComponent = Component.extend({
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   attachment: null,
   isDownloadingAttachment: false,
@@ -12,7 +13,7 @@ const AttachmentDetailComponent = Ember.Component.extend({
     downloadAttachment() {
       const url = ENV.host + this.get("attachment.downloadUrl");
       this.set("isDownloadingAttachment", true);
-      this.get("ajax").request(url)
+      this.ajax.request(url)
       .then((result) => {
         window.open(result.data.url);
         if(!this.isDestroyed) {
@@ -21,7 +22,7 @@ const AttachmentDetailComponent = Ember.Component.extend({
       }, (error) => {
         if(!this.isDestroyed) {
           this.set("isDownloadingAttachment", false);
-          this.get("notify").error(error.payload.message);
+          this.notify.error(error.payload.message);
         }
       });
     }

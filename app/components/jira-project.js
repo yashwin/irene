@@ -1,13 +1,15 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
 import ENV from 'irene/config/environment';
+import { inject as service } from '@ember/service';
 import { translationMacro as t } from 'ember-i18n';
 
-const JiraProjectComponent = Ember.Component.extend({
-  i18n: Ember.inject.service(),
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+const JiraProjectComponent = Component.extend({
+  i18n: service(),
+  ajax: service(),
+  notify: service('notification-messages-service'),
   project: null,
-  jiraProjects: ["Loading..."],
+  jiraProjects: ["Loading..."], // eslint-disable-line
 
 
   tIntegratedJIRA: t("integratedJIRA"),
@@ -16,32 +18,32 @@ const JiraProjectComponent = Ember.Component.extend({
   tFetchJIRAProjectFailed: t("fetchProjectFailed"),
 
   confirmCallback() {
-    const tProjectRemoved = this.get("tProjectRemoved");
+    const tProjectRemoved = this.tProjectRemoved;
     const projectId = this.get("project.id");
     const deleteJIRA = [ENV.endpoints.deleteJIRAProject, projectId].join('/');
-    this.get("ajax").delete(deleteJIRA)
+    this.ajax.delete(deleteJIRA)
     .then(() => {
-      this.get("notify").success(tProjectRemoved);
+      this.notify.success(tProjectRemoved);
       if(!this.isDestroyed) {
         this.send("closeDeleteJIRAConfirmBox");
         this.set("project.jiraProject", "");
       }
     }, (error) => {
       if(!this.isDestroyed) {
-        this.get("notify").error(error.payload.error);
+        this.notify.error(error.payload.error);
       }
     });
   },
 
-  fetchJiraProjects: (function() {
-    const tFetchJIRAProjectFailed = this.get("tFetchJIRAProjectFailed");
-    this.get("ajax").request(ENV.endpoints.jiraProjects)
+  fetchJiraProjects: computed(function() {
+    const tFetchJIRAProjectFailed = this.tFetchJIRAProjectFailed;
+    this.ajax.request(ENV.endpoints.jiraProjects)
     .then((data) => {
       if(!this.isDestroyed) {
         this.set("jiraProjects", data.projects);
       }
     }, () => {
-      this.get("notify").error(tFetchJIRAProjectFailed);
+      this.notify.error(tFetchJIRAProjectFailed);
     });
   }).on("init"),
 
@@ -49,21 +51,21 @@ const JiraProjectComponent = Ember.Component.extend({
 
     selectProject() {
       const project= this.$('select').val();
-      const tIntegratedJIRA = this.get("tIntegratedJIRA");
-      const tRepoNotIntegrated = this.get("tRepoNotIntegrated");
+      const tIntegratedJIRA = this.tIntegratedJIRA;
+      const tRepoNotIntegrated = this.tRepoNotIntegrated;
       const projectId = this.get("project.id");
       const url = [ENV.endpoints.setJira, projectId].join('/');
 
       const data =
         {project};
-      this.get("ajax").post(url, {data})
+      this.ajax.post(url, {data})
       .then(() => {
-        this.get("notify").success(tIntegratedJIRA);
+        this.notify.success(tIntegratedJIRA);
         if(!this.isDestroyed) {
           this.set("project.jiraProject", project);
         }
       }, () => {
-        this.get("notify").error(tRepoNotIntegrated);
+        this.notify.error(tRepoNotIntegrated);
       });
     },
 

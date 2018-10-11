@@ -1,29 +1,30 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import ENV from 'irene/config/environment';
 
 
-const InvitationAcceptComponent = Ember.Component.extend({
+const InvitationAcceptComponent = Component.extend({
 
   invitation: null,
-  ajax: Ember.inject.service(),
-  notify: Ember.inject.service('notification-messages-service'),
+  ajax: service(),
+  notify: service('notification-messages-service'),
 
   actions: {
     acceptInvite() {
       const data = {
         invitationUuid: this.get("invitation.id"),
-        username: this.get("username"),
-        password: this.get("password")
+        username: this.username,
+        password: this.password
       };
-      this.get("ajax").post(ENV.endpoints.signup, {data})
+      this.ajax.post(ENV.endpoints.signup, {data})
       .then(() => {
         // FIXME: This should be this.transitionTo`
-        this.get("notify").success("User got created sucessfully", ENV.notifications);
+        this.notify.success("User got created sucessfully", ENV.notifications);
         if(!this.isDestroyed) {
           setTimeout(() => window.location.href = "/", 3 * 1000);
         }
       }, (error) => {
-        this.get("notify").error(error.payload.message, ENV.notifications);
+        this.notify.error(error.payload.message, ENV.notifications);
       });
     }
   }
