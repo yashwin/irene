@@ -32,33 +32,20 @@ const IreneAuthenticator = Base.extend({
     }
   },
 
-  authenticate(identification, password, otp, errorCallback, loginStatus) {
+  authenticate(identification, password, otp) {
     const ajax = this.get("ajax");
-    return new Promise((resolve, reject) => {
-      const data = {
-        username: identification,
-        password,
-        otp
-      };
-      const url = ENV['ember-simple-auth']['loginEndPoint'];
-      ajax.post(url, {data})
-      .then((data) => {
+    const data = {
+      username: identification,
+      password,
+      otp
+    }
+    const url = ENV['ember-simple-auth']['loginEndPoint'];
+    return ajax.post(url, {data})
+      .then(data => {
         data = processData(data);
-        resolve(data);
         this.resumeTransistion();
-      }, (error) => {
-        loginStatus(false);
-        errorCallback(error);
-        this.get("notify").error(error.payload.message, ENV.notifications);
-        for (error of error.errors) {
-          if (error.status === "0") {
-            return this.get("notify").error("Unable to reach server. Please try after sometime", ENV.notifications);
-          }
-          this.get("notify").error("Please enter valid account details", ENV.notifications);
-        }
-        return reject(error);
+        return data
       });
-    });
   },
 
   restore(data) {
