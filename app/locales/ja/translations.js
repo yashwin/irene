@@ -52,6 +52,7 @@ export default {
   "cancel": "キャンセル",
   "cancelSubsciption": "サブスクリプションのキャンセル",
   "changeDevice": "デバイスの変更",
+  "changeMFAMethod": "Change",
   "changePassword": "パスワードの変更",
   "changeRole": "役割の変更",
   "chooseAFile": "比較するファイルを選択してください",
@@ -471,7 +472,7 @@ export default {
   "modalCard": {
     "selectMFAMethod": {
       "title": "Enble Multi Factor Authentication",
-      "description": "Multi Factor Authentication adds an extra layer of security to your account. During login, in addition to your username and password, you’ll need to enter an OTP. Select any of the following methods to activate MFA",
+      "description": "Multi Factor Authentication adds an extra layer of security to your account. <br>During login, in addition to your username and password, you’ll need to enter an OTP. <br>Select any of the following methods to activate MFA",
       "selectMethod": "Select MFA Method",
     },
     "enableMFAApp": {
@@ -486,7 +487,8 @@ export default {
       "title": "Using Email",
       "intro": "During sign in, a security code will be sent to the email address associated with your appknox account.",
       "setup": "Enable email authentication",
-      "description": "A security code has been send to email ",
+      "sendMailMsg": "Click continue to send OTP code to email ",
+      "description": "We have sent a security code to email ",
       "enterCode": "Please enter the code below."
     },
     "disableMFA": {
