@@ -5,6 +5,7 @@ import ENUMS from 'irene/enums';
 import { translationMacro as t } from 'ember-i18n';
 import triggerAnalytics from 'irene/utils/trigger-analytics';
 import poll from 'irene/services/poll';
+import { task } from 'ember-concurrency';
 
 export default Component.extend({
   tagName: "",
@@ -23,6 +24,11 @@ export default Component.extend({
     this.send('pollDynamicStatus');
   },
 
+
+  openCapturedApiModal: task(function * (){
+      
+    yield this.set('showCapturedApiModal', true);
+  }),
   actions: {
 
     setAPIScanOption() {
@@ -128,6 +134,14 @@ export default Component.extend({
     openRunDynamicScanModal() {
       this.set("showRunDynamicScanModal", true);
     },
+    
+    closeCapturedApiModal(){
+      this.set("showAPIScanModal", false);
+      this.set("showAPIURLFilterScanModal", false);
+      this.set("showRunDynamicScanModal", false);
+      this.set('showCapturedApiModal', false)
+    },
+
 
     closeRunDynamicScanModal() {
       this.set("showRunDynamicScanModal", false);
