@@ -33,19 +33,10 @@
 if notVNCViewer
   if file.project.isAPIScanEnabled
     .column.flex-center
-      if file.isRunningApiScan
-        button.is-primary.margin-top20.is-progress disabled="disabled"
-         | #{t "scanning"} : #{file.apiScanProgress}
-         | %
-      else if file.isApiDone
-         button.is-primary.margin-top20 disabled="disabled"
-           = fa-icon "fa-check"
-           | &nbsp; #{t "completed"}
-      else if file.isApiNotDone
-        button.is-primary.margin-top20.ac-start-api-scan click={(perform openCapturedApiModal)} disabled=file.isNotNoneStatus
-          .fa-font-size
-            = fa-icon "fa-play"
-          | &nbsp; #{t "start"}
+      button.is-primary.margin-top20.ac-start-api-scan click={(perform openCapturedApiModal)} disabled=file.isNotNoneStatus
+        .fa-font-size
+          = fa-icon "fa-play"
+        | &nbsp; #{t "start"}
 
 = modal-card isActive=showCapturedApiModal title=(t "modalCard.runAPIScan.title")
   .card-body.warning-modal
@@ -55,13 +46,16 @@ if notVNCViewer
           = t "modalCard.runAPIScan.description"
         .project-preference-component
           if showCapturedApiModal
-            = captured-apis file=file
+            = captured-apis file=file count=count
         form.margin-top20
           p.control
           .columns
-            .column
-              button.modal-button.is-primary click="closeCapturedApiModal"
+            .column.flex-center
+              button.modal-button.is-primary click={(perform closeCapturedApiModal)}
                 = t "cancel"
+            .column.flex-center
+              button.modal-button.is-primary click={(perform runCapturedAPIScan)} disabled=runCapturedAPIScan.isRunning
+                = t "modalCard.apiScan.startApiScan"
 
 = modal-card isActive=showAPIScanModal title=(t "modalCard.apiScan.title")
   .card-body.warning-modal
@@ -110,3 +104,26 @@ if notVNCViewer
                 .column
                   button.modal-button.is-primary click="goBack"
                     =  t "cancel"
+
+// = modal-card isActive=showCapturedAPIFilterModal title=(t "modalCard.runAPIScan.title")
+//   .card-body.warning-modal
+//     .card-wrapper
+//       .api-scanning
+//         h6
+//           = t "modalCard.apiScan.description"
+//         .margin-top20.add-filter-list
+//           if countCapturedAPI.isRunning
+//               .empty-state
+//                 = fa-icon "fa-spinner fa-spin"
+//                 | #{t "loading"}...
+//           else
+//             | Total selected APIs #{count}
+//         form.margin-top20
+//           p.control
+//           .columns
+//             .column.flex-center
+//               button.modal-button.is-primary click={(perform goBackCapturedAPI)}
+//                 | Go Back
+//             .column.flex-center
+//               button.modal-button.is-primary click={(perform runCapturedAPIScan)} disabled=runCapturedAPIScan.isRunning
+//                 = t "modalCard.apiScan.startApiScan"

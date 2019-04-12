@@ -11,6 +11,7 @@ export default Component.extend({
   tagName: "",
   apiScanModal: false,
   dynamicScanModal: false,
+  count: 0,
 
   i18n: service(),
   trial: service(),
@@ -20,15 +21,48 @@ export default Component.extend({
 
   tStartingScan: t("startingScan"),
 
+
   didInsertElement() {
     this.send('pollDynamicStatus');
   },
-
-
-  openCapturedApiModal: task(function * (){
-      
-    yield this.set('showCapturedApiModal', true);
+  closeCapturedApiModal: task(function * (){
+    yield this.set('showCapturedApiModal', false)
   }),
+  setCpaturedAPIScanOption: task(function *() {
+
+    const file = this.get('file');
+    const fileId = file.id;
+    const dynamicUrl = [ENV.endpoints.files, fileId,ENV.endpoints.capturedApiScanStart].join('/');
+    return yield this.get("ajax").post(dynamicUrl,{namespace: ENV.namespace_v2})
+  }),
+
+  countCapturedAPI: task(function * (){
+    let data = {fileId: this.get('file.id'), is_active:true};
+    const url = [ENV.endpoints.files, this.get('file.id'), "capturedapis"].join('/');
+    return yield this.get("ajax").request(url,{namespace: ENV.namespace_v2, data});
+
+  }),
+  runCapturedAPIScan: task(function * () {
+    try{
+      yield this.get('setCpaturedAPIScanOption').perform()
+      yield this.get("notify").success("Starting captured API Scan");
+      if(!this.isDestroyed) {
+        this.set('showCapturedApiModal', false)
+      }
+    }catch(error){
+        this.get("notify").error(error.toString());
+    }
+  }),
+  openCapturedApiModal: task(function * (){
+    try{
+      let filterCapturedAPIData = yield this.get('countCapturedAPI').perform();
+      yield this.set('count', filterCapturedAPIData.count)
+      yield this.set('showCapturedApiModal', true);
+    }catch(error){
+      this.notify(error.toString())
+    }
+  }),
+
   actions: {
 
     setAPIScanOption() {
@@ -134,14 +168,6 @@ export default Component.extend({
     openRunDynamicScanModal() {
       this.set("showRunDynamicScanModal", true);
     },
-    
-    closeCapturedApiModal(){
-      this.set("showAPIScanModal", false);
-      this.set("showAPIURLFilterScanModal", false);
-      this.set("showRunDynamicScanModal", false);
-      this.set('showCapturedApiModal', false)
-    },
-
 
     closeRunDynamicScanModal() {
       this.set("showRunDynamicScanModal", false);

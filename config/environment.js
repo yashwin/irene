@@ -204,7 +204,8 @@ module.exports = function(environment) {
       requestAccess: 'request_access',
       appscan: 'appscan',
       scancount: 'scancount',
-      recentIssues: 'recent_issues'
+      recentIssues: 'recent_issues',
+      capturedApiScanStart: 'start_apiscan',
     },
     csb: {
       reportDownload: { feature: "Account Settings", module: "Setup", product: "Appknox" },
