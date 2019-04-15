@@ -313,6 +313,9 @@ button
     .fa-times
       color: #EF4836
 
+.float-right
+  float: right
+
 .current-user
   float: right
   display: flex
@@ -783,6 +786,16 @@ div[class^="_c-notification__container"]
 .remove, .copy-password
   cursor: pointer
 
+.api-scanning
+  .no-data
+    color: #404040
+    .column
+      &:first-child
+        background-color: #F5D76E
+      &:nth-child(2)
+        border-width: 2px 2px 2px 0px
+        border-style: solid
+        border-color: lighten($default, 50%)
 .api-scanning
   .warning-band
     // background-color: #F5D76E
@@ -2837,7 +2850,6 @@ $attachment-icon-width: 4em
     color: $red
 
 .project-preference-component
-  margin-top: 10px
   border: 2px solid lighten($grey, 40%)
   padding: 10px
   margin-bottom: 30px
@@ -3111,3 +3123,21 @@ $dropdown-default-theme: $color-table
   i
     margin-top: 0
   padding-bottom: 1em
+
+.captured-prop
+  font-weight: bold;
+  display: inline;
+  float: right;
+  border: 0px solid #959393;
+  padding: 0px 4px 0px 4px;
+  border-radius: 4px;
+  color: white;
+  background: #908b8b;
+  margin-left: 3px;
+
+.captured-heading
+  display: inline;
+  font-weight: bold;
+
+
+

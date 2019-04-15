@@ -12,6 +12,7 @@ export default Component.extend({
   apiScanModal: false,
   dynamicScanModal: false,
   count: 0,
+  totalCount: 0,
 
   i18n: service(),
   trial: service(),
@@ -42,6 +43,12 @@ export default Component.extend({
     return yield this.get("ajax").request(url,{namespace: ENV.namespace_v2, data});
 
   }),
+  countTotalCapturedAPI: task(function * (){
+    let data = {fileId: this.get('file.id')};
+    const url = [ENV.endpoints.files, this.get('file.id'), "capturedapis"].join('/');
+    return yield this.get("ajax").request(url,{namespace: ENV.namespace_v2, data});
+
+  }),
   runCapturedAPIScan: task(function * () {
     try{
       yield this.get('setCpaturedAPIScanOption').perform()
@@ -56,7 +63,9 @@ export default Component.extend({
   openCapturedApiModal: task(function * (){
     try{
       let filterCapturedAPIData = yield this.get('countCapturedAPI').perform();
-      yield this.set('count', filterCapturedAPIData.count)
+      yield this.set('count', filterCapturedAPIData.count);
+      let totalCapturedAPIData = yield this.get('countTotalCapturedAPI').perform();
+      yield this.set('totalCount', totalCapturedAPIData.count);
       yield this.set('showCapturedApiModal', true);
     }catch(error){
       this.notify(error.toString())
