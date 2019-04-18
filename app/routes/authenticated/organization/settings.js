@@ -8,7 +8,9 @@ export default Route.extend({
   title: `Settings${config.platform}`,
 
   async model(){
-    const orgId = this.get('organization').selected.id;
-    return await this.get('store').find('organization', orgId);
+    return {
+      user: await this.modelFor("authenticated"),
+      organization: await this.get('organization.selected'),
+    }
   }
 });
